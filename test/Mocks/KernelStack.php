@@ -17,51 +17,26 @@
  * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model\v1;
+namespace oat\taoRestAPI\test\Mocks;
 
 
-use oat\taoRestAPI\model\RestApiInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\MiddlewareAwareTrait;
 
-/**
- * Class RestApiService
- * @package oat\taoRestAPI\model\v1
- *
- * @author Alexander Zagovorichev <zagovorichev@gmail.com>
- */
-class RestApiService implements RestApiInterface
+
+class KernelStack
 {
-    public function version()
-    {
-        return '1';
-    }
+    use MiddlewareAwareTrait;
 
-    public function get()
+    public function __invoke(ServerRequestInterface $req, ResponseInterface $res)
     {
-        // TODO: Implement get() method.
+        return $res->write('Center');
     }
-
-    public function post()
+    
+    public function add($callable)
     {
-        // TODO: Implement post() method.
-    }
-
-    public function put()
-    {
-        // TODO: Implement put() method.
-    }
-
-    public function delete()
-    {
-        // TODO: Implement delete() method.
-    }
-
-    public function patch()
-    {
-        // TODO: Implement patch() method.
-    }
-
-    public function options()
-    {
-        // TODO: Implement options() method.
+        $this->addMiddleware($callable);
+        return $this;
     }
 }

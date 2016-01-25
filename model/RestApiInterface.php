@@ -24,16 +24,26 @@ namespace oat\taoRestAPI\model;
 
 interface RestApiInterface
 {
+    
     const SERVICE_ID = 'taoRestAPI/restApi';
 
     /**
+     * Current version
+     *
+     * @var string
+     */
+    const VERSION = '1.0.0';
+    
+    /**
      * Get data
      * HTTP GET
-     * @return mixed
+     * @param null $uri - if null get list of resources, else one resource
+     * @param null $params - params for getting data (partial content page or list of fields from resource)
+     * @return array|resource 200 or 206 ("Partial Content" if many items and used pagination)
      *
      * @author Alexander Zagovorichev <zagovorichev@gmail.com>
      */
-    public function get();
+    public function get($uri = null, $params = null);
 
     /**
      * Create new record
@@ -101,12 +111,5 @@ interface RestApiInterface
      * @author Alexander Zagovorichev <zagovorichev@gmail.com>
      */
     public function options();
-
-    /**
-     * Version of the Rest API
-     * @return string
-     *
-     * @author Alexander Zagovorichev <zagovorichev@gmail.com>
-     */
-    public function version();
+    
 }

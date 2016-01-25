@@ -21,6 +21,7 @@
 
 namespace oat\taoRestAPI\test;
 
+use InvalidArgumentException;
 use oat\tao\test\TaoPhpUnitTestRunner;
 
 class EnvironmentTest extends TaoPhpUnitTestRunner
@@ -29,7 +30,22 @@ class EnvironmentTest extends TaoPhpUnitTestRunner
 
     public function testEnvironment()
     {
-        $this->get('/');
-        $this->assertTrue($this->response->isOk());
+        $self = $this;
+        $resOut = $this->request('GET', '/list', function($req, $res) use ($self) {
+            $self->assertInstanceOf('\Slim\Http\Request', $req);
+            $res->write('Hello');
+            return $res;
+        });
+
+        $this->assertInstanceOf('\Psr\Http\Message\ResponseInterface', $resOut);
+        $this->assertEquals('Hello', (string)$this->response->getBody());
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testUnsupportedRequestMethod()
+    {
+        $this->request('FAILED', '/', function () {});
     }
 }

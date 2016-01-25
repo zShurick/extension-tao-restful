@@ -60,20 +60,97 @@ class v1RestApiServiceTest extends TaoPhpUnitTestRunner
         $this->assertEquals($this->restApiService->version(), '1');
     }
 
-    public function testGet()
+    /**
+     * Http Get
+     * list of the resources
+     */
+    public function testGetList()
     {
+        $self = $this;
+        $this->request('GET', '/list', function ($req, $res) use ($self) {
+            $resources = $self->restApiService->get();
+            $self->assertTrue(is_array($resources));
+            $res->write();
+            return $res;
+        });
+        
+        $this->assertEquals('resource 1name,id', (string)$this->response->getBody());
 
-        $callable = function ($req, $res) {
-            $this->restApiService->get();
-        };
-
-        $route = $this->get('/', $callable);
-
-        $this->assertInstanceOf('\Slim\Route', $route);
-        $this->assertAttributeContains('GET', 'methods', $route);
-
-        $router = $this->app->getContainer()->get('router');
-        $this->assertAttributeEquals('/', 'pattern', $router->lookupRoute('route0'));
     }
 
+    /**
+     * Http Get
+     * get one resource
+     */
+    public function testGetResource()
+    {
+        $self = $this;
+        $this->request('GET', '/list/{id}', '/list/1', function ($req, $res, $args) use ($self) {
+            $res->write($self->restApiService->get($args['id']));
+            return $res;
+        });
+
+        $this->assertEquals('resource 1', (string)$this->response->getBody());
+    }
+
+    /**
+     * Http Get
+     * get partial data from resource (some fields)
+     */
+    public function testGetResourcePartial()
+    {
+        $self = $this;
+        $this->request('GET', '/list/{id}', '/list/1?fields=name,id', function ($req, $res, $args) use ($self) {
+            $res->write($self->restApiService->get($args['id'], $req->getQueryParam('fields')));
+            return $res;
+        });
+
+        $this->assertEquals('resource 1name,id', (string)$this->response->getBody());
+    }
+
+    /**
+     * Http Post
+     * Create new resource
+     */
+    public function testCreateNewResource()
+    {
+
+    }
+
+    /**
+     * Http Put
+     * Update resource
+     */
+    public function testUpdateResource()
+    {
+
+    }
+
+    /**
+     * Http Patch
+     * Update one parameter in resource
+     * for example "update date" will not be changed
+     */
+    public function testUpdateParam()
+    {
+
+    }
+
+    /**
+     * Http delete
+     * Delete resource
+     */
+    public function testDeleteResource()
+    {
+
+    }
+
+    /**
+     * Http Options
+     * Get link options
+     */
+    public function testOptions()
+    {
+
+    }
 }
