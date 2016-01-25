@@ -1,6 +1,6 @@
 {
 
-    "name": "oat/taoRestAPI",
+    "name": "oat-sa/extension-tao-restful",
     "description" : "RestAPI extension for tao project",
     "type" : "tao-extension",
     "authors" : [
