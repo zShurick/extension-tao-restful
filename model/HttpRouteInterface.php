@@ -20,7 +20,7 @@
 namespace oat\taoRestAPI\model;
 
 
-interface HttpRequestInterface
+interface HttpRouteInterface
 {
-    
+    public function request();
 }

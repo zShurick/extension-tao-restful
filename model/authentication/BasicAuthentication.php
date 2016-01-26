@@ -24,6 +24,16 @@ use oat\taoRestAPI\model\AuthenticationInterface;
 
 class BasicAuthentication implements AuthenticationInterface
 {
+    private $app;
+    
+    private $container;
+
+    public function __construct($app, array $options = array())
+    {
+        $this->app = $app;
+        $this->container = $this->setupContainer($options);
+    }
+    
     public function authenticate()
     {
         $request->headers->get('PHP_AUTH_USER', false);

@@ -16,26 +16,35 @@
  * 
  * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
  *               
- * 
+ * @author A. Zagovorichev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoRestAPI\controller;
 
+
+use tao_actions_CommonModule;
+use oat\taoRestAPI\model\RestApi\v1\RestApiService;
+
 /**
- * Sample controller
- *
  * @author Open Assessment Technologies SA
  * @package taoRestAPI
  * @license GPL-2.0
  *
  */
-class TaoRestAPI extends \tao_actions_CommonModule {
+class TaoRestAPI extends tao_actions_CommonModule {
 
+    /**
+     * @var RestApiService
+     */
+    private $restApiService;
+    
     /**
      * initialize the services
      */
     public function __construct(){
         parent::__construct();
+        
+        $this->restApiService = new RestApiService();
     }
 
     /**

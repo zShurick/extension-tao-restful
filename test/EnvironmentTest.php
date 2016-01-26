@@ -23,10 +23,11 @@ namespace oat\taoRestAPI\test;
 
 use InvalidArgumentException;
 use oat\tao\test\TaoPhpUnitTestRunner;
+use oat\taoRestAPI\test\Mocks\EnvironmentTrait;
 
 class EnvironmentTest extends TaoPhpUnitTestRunner
 {
-    use EnvironmentTestTrait;
+    use EnvironmentTrait;
 
     public function testEnvironment()
     {

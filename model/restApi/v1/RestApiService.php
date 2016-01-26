@@ -17,7 +17,7 @@
  * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model\v1;
+namespace oat\taoRestAPI\model\RestApi\v1;
 
 
 use oat\taoRestAPI\model\RestApiInterface;
@@ -33,28 +33,12 @@ use Slim\MiddlewareAwareTrait;
 class RestApiService implements RestApiInterface
 {
 
-    use CallableResolverAwareTrait;
     use MiddlewareAwareTrait;
+    use CallableResolverAwareTrait;
 
-    /**
-     * Load resource
-     * @param $uri
-     * @param null $fields
-     * @return string
-     */
-    private function getResource( $uri, $fields = null )
+    public function __construct($config = [])
     {
-        return 'resource ' . $uri . $fields;
-    }
 
-    /**
-     * Load list of resources
-     * @param null $params
-     * @return array
-     */
-    private function getAllResources( $params = null )
-    {
-        return [];
     }
 
     /**
@@ -62,15 +46,15 @@ class RestApiService implements RestApiInterface
      * CURL –X GET \
      * -H "Accept: application/json" \
      * https://api.tao.com/v1/item
-     * 
+     *
      * OR
      * To get one item data getResource()
      *
      * CURL –X GET \
      * -H "Accept: application/json" \
      * https://api.tao.com/v1/item/1?fields=id,name
-     * 
-     * 
+     *
+     *
      * @param null $uri
      * @param null $params
      * @return array|string

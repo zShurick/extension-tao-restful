@@ -23,7 +23,7 @@ namespace oat\taoRestAPI\test;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\model\RestApiMiddleware;
+use oat\taoRestAPI\test\Mocks\KernelStack;
 use ReflectionProperty;
 use Slim\Http\Body;
 use Slim\Http\Headers;
@@ -31,11 +31,11 @@ use Slim\Http\Uri;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-class RestApiMiddlewareTest extends TaoPhpUnitTestRunner
+class MiddlewareStackTest extends TaoPhpUnitTestRunner
 {
     public function testSeedsMiddlewareStack()
     {
-        $stack = new RestApiMiddleware();
+        $stack = new KernelStack();
         $stack->add(function ($req, $res, $next) {
             return $res->write('Hi');
         });
@@ -48,7 +48,7 @@ class RestApiMiddlewareTest extends TaoPhpUnitTestRunner
     public function testCallMiddlewareStack()
     {
         // Build middleware stack
-        $stack = new RestApiMiddleware();
+        $stack = new KernelStack();
         $stack->add(function ($req, $res, $next) {
             $res->write('In1');
             $res = $next($req, $res);
