@@ -17,10 +17,16 @@
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model\httpRequest;
+namespace oat\taoRestAPI\exception;
 
 
-class HttpRequestService
+use common_Exception;
+
+/**
+ * Class HttpRouteException
+ * @package oat\taoRestAPI\exception
+ */
+class HttpRouteException extends common_Exception 
 {
-
+    
 }
