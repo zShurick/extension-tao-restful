@@ -20,29 +20,24 @@
 namespace oat\taoRestAPI\model\httpRequest;
 
 
-use oat\taoRestAPI\exception\HttpRouteException;
+use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\model\HttpRouterInterface;
 
-class HttpRoute
+abstract class HttpRouter implements HttpRouterInterface
 {
 
     private $url;
-
     private $key;
 
     public function __construct($uriMap = '')
     {
-        if (strpos('/', $uriMap) === false) {
-            throw new HttpRouteException(__('Incorrect uri format for Restful'));
+        if (empty($uriMap) || strpos($uriMap, '/') === false) {
+            throw new HttpRequestException(__('Incorrect uri format for Restful'));
         }
 
-        $pos = strrpos('/', $uriMap);
+        $pos = strrpos($uriMap, '/');
         $this->key = trim(substr($uriMap, $pos), '/');
         $this->url = substr($uriMap, 0, $pos);
-    }
-
-    public function getKey()
-    {
-        return $this->key;
     }
 
     public function router()
@@ -50,55 +45,60 @@ class HttpRoute
         $method = strtolower($_SERVER['REQUEST_METHOD']);
 
         if (!method_exists($this, $method)) {
-            throw new HttpRouteException(__('Unsupported HTTP request method'));
+            throw new HttpRequestException(__('Unsupported HTTP request method'));
         }
-        
+
         return $this->$method();
     }
 
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    abstract protected function getList();
+    
+    abstract protected function getOne();
+    
     public function get()
     {
-        if(!empty($this->key)) {
-            // one
-        } else {
-            // list
-        }
+        return empty($this->key)
+            ? $this->getList()
+            : $this->getOne();
     }
 
     public function post()
     {
         if (!empty($this->key)) {
-            throw new HttpRouteException(__('You can\'t create new resource on object'));
+            throw new HttpRequestException(__('You can\'t create new resource on object'));
         }
     }
 
     public function put()
     {
         if (empty($this->key)) {
-            throw new HttpRouteException(__('You can\'t update list of the resources'));
+            throw new HttpRequestException(__('You can\'t update list of the resources'));
         }
     }
 
     public function patch()
     {
         if (empty($this->key)) {
-            throw new HttpRouteException(__('You can\'t update list of the resources'));
+            throw new HttpRequestException(__('You can\'t update list of the resources'));
         }
     }
 
     public function delete()
     {
         if (empty($this->key)) {
-            throw new HttpRouteException(__('You can\'t delete list of the resources'));
+            throw new HttpRequestException(__('You can\'t delete list of the resources'));
         }
     }
 
     public function options()
     {
-        if(!empty($this->key)) {
-            // one
-        } else {
-            // list
-        }
+        return empty($this->key)
+            ? ['POST', 'GET', 'OPTIONS']
+            : ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
     }
 }

@@ -23,10 +23,10 @@ namespace oat\taoRestAPI\exception;
 use common_Exception;
 
 /**
- * Class HttpRouteException
+ * Class HttpRequestException
  * @package oat\taoRestAPI\exception
  */
-class HttpRouteException extends common_Exception 
+class HttpRequestException extends common_Exception 
 {
     
 }

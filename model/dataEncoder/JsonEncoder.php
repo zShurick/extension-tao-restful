@@ -17,10 +17,15 @@
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\model\dataEncoder;
 
 
-interface DataEncoderInterface
+use oat\taoRestAPI\model\DataEncoderInterface;
+
+class JsonEncoder implements DataEncoderInterface
 {
-    public function encode( $data );
+    public function encode( $data )
+    {
+        return json_encode($data);
+    }
 }

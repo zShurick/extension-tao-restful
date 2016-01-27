@@ -21,11 +21,12 @@ namespace oat\taoRestAPI\model\dataEncoder;
 
 
 use oat\taoRestAPI\model\DataEncoderInterface;
+use tao_helpers_Xml;
 
-class jsonFormat implements DataEncoderInterface
+class XmlEncoder implements DataEncoderInterface
 {
-    public function encode($format)
+    public function encode($data)
     {
-        // TODO: Implement encode() method.
+        return tao_helpers_Xml::from_array($data);
     }
 }

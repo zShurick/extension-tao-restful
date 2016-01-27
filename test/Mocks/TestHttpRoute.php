@@ -17,10 +17,44 @@
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\test\Mocks;
 
 
-interface HttpRouteInterface
+use oat\taoRestAPI\model\httpRequest\HttpRouter;
+
+class TestHttpRoute extends HttpRouter
 {
-    public function request();
+    protected function getList()
+    {
+        return 'list of the resources';
+    }
+    
+    protected function getOne()
+    {
+        return 'one resource';
+    }
+    
+    public function post()
+    {
+        parent::post();
+        return 'resource';
+    }
+
+    public function put()
+    {
+        parent::put();
+        return 'resource';
+    }
+
+    public function patch()
+    {
+        parent::patch();
+        return 'resource';
+    }
+
+    public function delete()
+    {
+        parent::delete();
+        return true;
+    }
 }
