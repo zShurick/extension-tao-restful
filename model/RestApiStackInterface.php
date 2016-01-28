@@ -22,7 +22,23 @@
 namespace oat\taoRestAPI\model;
 
 
-interface AuthenticationInterface
+interface RestApiStackInterface
 {
-    public function authenticate();
+    /**
+     * Add middleware
+     * 
+     * @param $callable
+     * @return RestApiStackInterface
+     */
+    public function add($callable);
+
+    /**
+     * Run stack execution
+     * 
+     * @param $req
+     * @param $res
+     * @return mixed
+     */
+    public function callMiddlewareStack($req, $res);
 }
+

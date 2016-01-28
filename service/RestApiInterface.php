@@ -14,15 +14,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
- * @author Alexander Zagovorichev <zagovorichev@1pt.com>
+ * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
+ *
+ * @author Alexander Zagovorichev <zagovorichev@gmail.com>
  */
 
 namespace oat\taoRestAPI\model;
 
 
-interface AuthenticationInterface
+interface RestApiInterface
 {
-    public function authenticate();
+    
+    const SERVICE_ID = 'taoRestAPI/restApi';
+
+    /**
+     * Current RestApi version
+     *
+     * @var string
+     */
+    const VERSION = '1.0.0';
+    
 }

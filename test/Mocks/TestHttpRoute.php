@@ -31,25 +31,26 @@ class TestHttpRoute extends HttpRouter
     
     protected function getOne()
     {
-        return 'one resource';
+        $params = $this->req->getQueryParams();
+        return 'one resource ' . $this->req->getAttribute('id') . (isset($params['params']) ? ' ' . $params['params'] : '');
     }
     
     public function post()
     {
         parent::post();
-        return 'resource';
+        return 'resource created';
     }
 
     public function put()
     {
         parent::put();
-        return 'resource';
+        return 'resource updated';
     }
 
     public function patch()
     {
         parent::patch();
-        return 'resource';
+        return 'resource updated partially';
     }
 
     public function delete()

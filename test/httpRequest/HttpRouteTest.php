@@ -10,54 +10,79 @@ namespace oat\taoRestAPI\test\httpRequest;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
+use oat\taoRestAPI\test\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\Mocks\TestHttpRoute;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
 class HttpRouteTest extends TaoPhpUnitTestRunner
 {
+    use EnvironmentTrait;
+    
     /**
-     * @expectedException \oat\taoRestAPI\exception\HttpRequestException
+     * @expectedException \FastRoute\BadRouteException
      */
     public function testWithoutUri()
     {
-        new TestHttpRoute();
-    }
-    
-    public function testUriMap()
-    {
-        $route = new TestHttpRoute('/');
-        $this->assertEquals('', $route->getKey());
-        $route = new TestHttpRoute('/some-key');
-        $this->assertEquals('some-key', $route->getKey());
-        $route = new TestHttpRoute('/link/to/the/source/some-key');
-        $this->assertEquals('some-key', $route->getKey());
-    }
+        $this->request('GET', '', function ($req, $res, $args) {
+            new TestHttpRoute($req, $res);
 
-    /**
-     * @expectedException \oat\taoRestAPI\exception\HttpRequestException
-     */
-    public function testIncorrectHttpMethod()
-    {
-        $_SERVER['REQUEST_METHOD'] = 'FAILED';
-        $route = new TestHttpRoute('/');
-        $route->router();
+            return $res;
+        });
     }
     
     public function testHttpGet()
     {
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        
-        $route = new TestHttpRoute('/');
-        $this->assertEquals('list of the resources', $route->router());
+        $self = $this;
+        $this->request('GET', '/', function ($req, $res, $args) use ($self) {
+            $route = new TestHttpRoute($req, $res);
+            $self->assertEquals('list of the resources', $route->router());
+            
+            return $res;
+        });
 
-        $route = new TestHttpRoute('link/someId');
-        $this->assertEquals('one resource', $route->router());
+        $this->request('GET', '/resources', function ($req, $res, $args) use ($self) {
+            $route = new TestHttpRoute($req, $res);
+            $self->assertEquals('list of the resources', $route->router());
+
+            return $res;
+        });
+    }
+    
+    public function testHttpGetWithResource()
+    {
+        $this->request('GET', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('one resource 1', (string)$this->response->getBody());
+    }
+    
+    public function testHttpGetWithResourceWithParams()
+    {
+        $this->request('GET', '/resources/{id}', '/resources/1?params=field1,field2', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('one resource 1 field1,field2', (string)$this->response->getBody());
     }
     
     public function testHttpPost()
     {
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $route = new TestHttpRoute('/');
-        $this->assertEquals('resource', $route->router());
+        $this->request('POST', '/resources', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('resource created', (string)$this->response->getBody());
     }
 
     /**
@@ -65,16 +90,24 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
      */
     public function testHttpPostException()
     {
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $route = new TestHttpRoute('/id');
-        $route->router();
+        $this->request('POST', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
     }
 
     public function testHttpPut()
     {
-        $_SERVER['REQUEST_METHOD'] = 'PUT';
-        $route = new TestHttpRoute('/id');
-        $this->assertEquals('resource', $route->router());
+        $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('resource updated', (string)$this->response->getBody());
     }
 
     /**
@@ -82,16 +115,24 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
      */
     public function testHttpPutException()
     {
-        $_SERVER['REQUEST_METHOD'] = 'PUT';
-        $route = new TestHttpRoute('/');
-        $route->router();
+        $this->request('PUT', '/resources', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
     }
 
     public function testHttpPatch()
     {
-        $_SERVER['REQUEST_METHOD'] = 'PATCH';
-        $route = new TestHttpRoute('/id');
-        $this->assertEquals('resource', $route->router());
+        $this->request('PATCH', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('resource updated partially', (string)$this->response->getBody());
     }
 
     /**
@@ -99,16 +140,24 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
      */
     public function testHttpPatchException()
     {
-        $_SERVER['REQUEST_METHOD'] = 'PATCH';
-        $route = new TestHttpRoute('/');
-        $route->router();
+        $this->request('PATCH', '/resources', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
     }
 
     public function testHttpDelete()
     {
-        $_SERVER['REQUEST_METHOD'] = 'DELETE';
-        $route = new TestHttpRoute('/id');
-        $this->assertTrue($route->router());
+        $this->request('DELETE', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+
+        $this->assertEquals('1', (string)$this->response->getBody());
     }
 
     /**
@@ -116,17 +165,35 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
      */
     public function testHttpDeleteException()
     {
-        $_SERVER['REQUEST_METHOD'] = 'DELETE';
-        $route = new TestHttpRoute('/');
-        $route->router();
+        $this->request('DELETE', '/resources', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write($route->router());
+
+            return $res;
+        });
+    }
+
+    public function testHttpListResourcesOptions()
+    {
+        $this->request('OPTIONS', '/resources/', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write( implode(',', $route->router()) );
+
+            return $res;
+        });
+
+        $this->assertEquals('POST,GET,OPTIONS', (string)$this->response->getBody());
     }
     
-    public function testHttpOptions()
+    public function testHttpResourceOptions()
     {
-        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
-        $route = new TestHttpRoute('/');
-        $this->assertEquals(['POST', 'GET', 'OPTIONS'], $route->router());
-        $route = new TestHttpRoute('/id');
-        $this->assertEquals(['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], $route->router());
+        $this->request('OPTIONS', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $res->write( implode(',', $route->router()) );
+
+            return $res;
+        });
+
+        $this->assertEquals('GET,PUT,PATCH,DELETE,OPTIONS', (string)$this->response->getBody());
     }
 }

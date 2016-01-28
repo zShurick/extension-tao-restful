@@ -70,7 +70,7 @@ trait EnvironmentTrait
         $app = new App();
 
         // for running unit test in slim container
-        $app->get($route, function ($req, $res, $args) use ($callable) {
+        $app->any($route, function ($req, $res, $args) use ($callable) {
             return $callable($req, $res, $args);
         });
 
