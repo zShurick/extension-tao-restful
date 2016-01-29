@@ -28,10 +28,19 @@ use Psr\Http\Message\ServerRequestInterface;
 abstract class Router implements HttpRouterInterface
 {
 
+    /**
+     * @var ServerRequestInterface
+     */
     protected $req;
-    
-    private $res;
-    
+
+    /**
+     * @var Response
+     */
+    protected $res;
+
+    /**
+     * @var mixed
+     */
     private $resourceId;
     
     public function __construct(ServerRequestInterface $req, Response $res)
@@ -63,7 +72,6 @@ abstract class Router implements HttpRouterInterface
     
     public function get()
     {
-        $this->res->withStatus(200);
         empty($this->resourceId) 
             ? $this->getList()
             : $this->getOne();

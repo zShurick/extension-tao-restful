@@ -24,15 +24,68 @@ use oat\taoRestAPI\model\http\Request\Router;
 
 class TestHttpRoute extends Router
 {
+    
+    private function getRequestedRange()
+    {
+        $params = $this->req->getQueryParams();
+
+        if (isset($params['range']) && preg_match("/^\d{1,4}-\d{1,4}$/", $params['range'])) {
+            return explode('-', $params['range']);
+        }
+        
+        return [];
+    }
+    
+    private function getRequestedFilters()
+    {
+        $allowedFilters = ['filter1', 'filter2', 'filter3'];
+        $params = $this->req->getQueryParams();
+        $filters = [];
+        foreach ($allowedFilters as $filter) {
+            if (isset($params[$filter]) && !empty($params[$filter])) {
+                $filters[$filter] = $params[$filter];
+            }
+        }
+        return $filters;
+    }
+    
     protected function getList()
     {
-        return 'list of the resources';
+        
+        $range = $this->getRequestedRange();
+        if(count($range) == 2) {
+            if($range[0] > 0 && $range[1] < 48) {
+                $this->res = $this->res->withStatus(200, 'Ok');
+                //headers
+                /**
+                 * Content-Range: 0-47/48
+                 * Accept-Range: items 50
+                 */
+            }
+            
+            if($range[0] > 0 && $range[0] < 50 && $range[1] > 50) {
+                $this->res = $this->res->withStatus(206, 'Partial Content');
+                //headers
+                /**
+                 * Content-Range: 0-47/48
+                 * Accept-Range: items 50
+                 */
+            }
+        }
+        
+        $filters = $this->getRequestedFilters();
+        
+        $this->res->setResourceData('list of the resources');
     }
     
     protected function getOne()
     {
+        $res = 'one resource ' . $this->req->getAttribute('id');
+        // if params
         $params = $this->req->getQueryParams();
-        return 'one resource ' . $this->req->getAttribute('id') . (isset($params['params']) ? ' ' . $params['params'] : '');
+        $res .= (isset($params['fields']) ? ' ' . $params['fields'] : '');
+        
+        $this->res->setResourceData($res);
     }
     
     public function post()

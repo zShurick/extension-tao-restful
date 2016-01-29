@@ -30,44 +30,51 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
     
     public function testHttpGet()
     {
-        $self = $this;
-        $this->request('GET', '/', function ($req, $res, $args) use ($self) {
+        $this->request('GET', '/resources', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
             $route->router();
-            $self->assertEquals('list of the resources', $res->getResourceData());
             return $res;
         });
 
-        $this->request('GET', '/resources', function ($req, $res, $args) use ($self) {
-            $route = new TestHttpRoute($req, $res);
-            $self->assertEquals('list of the resources', $route->router());
-
-            return $res;
-        });
+        $this->assertEquals('list of the resources', $this->response->getResourceData());
+        $this->assertEquals(200, $this->response->getStatusCode());
     }
-    
+
+    public function testHttpGetListPagination()
+    {
+        $this->request('GET', '/resources?range=0-25', function ($req, $res, $args) {
+            $route = new TestHttpRoute($req, $res);
+            $route->router();
+            return $res;
+        });
+
+        $this->assertEquals('list of the resources', $this->response->getResourceData());
+        $this->assertEquals(200, $this->response->getStatusCode());
+    }
+
+
     public function testHttpGetWithResource()
     {
         $this->request('GET', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
-
+            $route->router();
             return $res;
         });
 
-        $this->assertEquals('one resource 1', (string)$this->response->getBody());
+        $this->assertEquals('one resource 1', $this->response->getResourceData());
+        $this->assertEquals(200, $this->response->getStatusCode());
     }
     
     public function testHttpGetWithResourceWithParams()
     {
-        $this->request('GET', '/resources/{id}', '/resources/1?params=field1,field2', function ($req, $res, $args) {
+        $this->request('GET', '/resources/{id}', '/resources/1?fields=field1,field2', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
-
+            $route->router();
             return $res;
         });
 
-        $this->assertEquals('one resource 1 field1,field2', (string)$this->response->getBody());
+        $this->assertEquals('one resource 1 field1,field2', $this->response->getResourceData());
+        $this->assertEquals(200, $this->response->getStatusCode());
     }
     
     public function testHttpPost()
