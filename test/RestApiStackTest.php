@@ -9,7 +9,7 @@ namespace oat\taoRestAPI\test;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\model\restApi\RestApiStack;
+use oat\taoRestAPI\model\stack\RestApiStack;
 use oat\taoRestAPI\test\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\Mocks\TestHttpRoute;
 
@@ -44,12 +44,12 @@ class RestApiStackTest extends TaoPhpUnitTestRunner
             $self->restApiStack
                 ->add(function ($req, $res, $next) {
                     $route = new TestHttpRoute($req, $res);
-                    $this->resourceData = $route->router();
+                    $route->router();
                     return $res;
                 })
                 ->add(function ($req, $res, $next) {
                     $res = $next($req, $res);
-                    $res->write($this->resourceData);
+                    $res->write($this->getResourceData());
                     return $res;
                 })
                 ->callMiddlewareStack($req, $res);

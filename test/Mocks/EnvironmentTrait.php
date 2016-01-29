@@ -14,7 +14,7 @@ use Slim\Http\Environment;
 use Slim\Http\Headers;
 use Slim\Http\Request;
 use Slim\Http\RequestBody;
-use Slim\Http\Response;
+use oat\taoRestAPI\model\http\Response;
 use Slim\Http\Uri;
 
 /**

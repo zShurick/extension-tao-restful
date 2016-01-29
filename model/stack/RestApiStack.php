@@ -16,14 +16,6 @@ class RestApiStack implements RestApiStackInterface
     use MiddlewareAwareTrait;
 
     /**
-     * For data transfer between middlewares 
-     * # (init with HttpRoute, using in encoder)
-     * 
-     * @var mixed
-     */
-    private $resourceData;
-
-    /**
      * @param $callable
      * @return $this
      */

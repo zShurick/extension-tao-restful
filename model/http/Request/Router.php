@@ -17,15 +17,15 @@
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model\httpRequest;
+namespace oat\taoRestAPI\model\http\Request;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\model\http\Response;
 use oat\taoRestAPI\model\HttpRouterInterface;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-abstract class HttpRouter implements HttpRouterInterface
+abstract class Router implements HttpRouterInterface
 {
 
     protected $req;
@@ -34,7 +34,7 @@ abstract class HttpRouter implements HttpRouterInterface
     
     private $resourceId;
     
-    public function __construct(ServerRequestInterface $req, ResponseInterface $res)
+    public function __construct(ServerRequestInterface $req, Response $res)
     {
         $this->req = $req;
         $this->res = $res;
@@ -63,10 +63,15 @@ abstract class HttpRouter implements HttpRouterInterface
     
     public function get()
     {
-        
-        return empty($this->resourceId) 
+        $this->res->withStatus(200);
+        empty($this->resourceId) 
             ? $this->getList()
             : $this->getOne();
+        
+        // todo 206 Partial Content
+        // &lt; Content-Range: 0-24/48
+        // &lt; Accept-Range: restaurant 50
+        
     }
 
     public function post()
@@ -74,10 +79,12 @@ abstract class HttpRouter implements HttpRouterInterface
         if (!empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t create new resource on object'));
         }
+        $this->res->withStatus(201);
     }
 
     public function put()
     {
+        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t update list of the resources'));
         }
@@ -85,6 +92,7 @@ abstract class HttpRouter implements HttpRouterInterface
 
     public function patch()
     {
+        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t update list of the resources'));
         }
@@ -92,6 +100,7 @@ abstract class HttpRouter implements HttpRouterInterface
 
     public function delete()
     {
+        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t delete list of the resources'));
         }
@@ -99,6 +108,7 @@ abstract class HttpRouter implements HttpRouterInterface
 
     public function options()
     {
+        $this->res->withStatus(200);
         return empty($this->resourceId)
             ? ['POST', 'GET', 'OPTIONS']
             : ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];

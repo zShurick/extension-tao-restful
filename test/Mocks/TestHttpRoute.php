@@ -20,9 +20,9 @@
 namespace oat\taoRestAPI\test\Mocks;
 
 
-use oat\taoRestAPI\model\httpRequest\HttpRouter;
+use oat\taoRestAPI\model\http\Request\Router;
 
-class TestHttpRoute extends HttpRouter
+class TestHttpRoute extends Router
 {
     protected function getList()
     {

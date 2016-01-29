@@ -15,16 +15,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\exception;
+namespace oat\taoRestAPI\model\http;
 
 
-/**
- * Class HttpRequestException
- * @package oat\taoRestAPI\exception
- */
-class HttpRequestException extends RestApiException 
+use Slim\Http\Response as HttpResponse;
+
+class Response extends HttpResponse
 {
+    /**
+     * Source data for response, if needed for data handling
+     * @var mixed
+     */
+    private $resourceData;
     
+    public function setResourceData( $data )
+    {
+        $this->resourceData = $data;
+    }
+    
+    public function getResourceData()
+    {
+        return $this->resourceData;
+    }
 }

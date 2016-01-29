@@ -12,8 +12,6 @@ namespace oat\taoRestAPI\test\httpRequest;
 use oat\tao\test\TaoPhpUnitTestRunner;
 use oat\taoRestAPI\test\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\Mocks\TestHttpRoute;
-use Slim\Http\Request;
-use Slim\Http\Response;
 
 class HttpRouteTest extends TaoPhpUnitTestRunner
 {
@@ -26,7 +24,6 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
     {
         $this->request('GET', '', function ($req, $res, $args) {
             new TestHttpRoute($req, $res);
-
             return $res;
         });
     }
@@ -36,8 +33,8 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
         $self = $this;
         $this->request('GET', '/', function ($req, $res, $args) use ($self) {
             $route = new TestHttpRoute($req, $res);
-            $self->assertEquals('list of the resources', $route->router());
-            
+            $route->router();
+            $self->assertEquals('list of the resources', $res->getResourceData());
             return $res;
         });
 
