@@ -50,6 +50,11 @@ abstract class Router implements HttpRouterInterface
         $this->resourceId = $this->getResourceId();
     }
     
+    public function getResponse()
+    {
+        return $this->res;
+    }
+    
     private function getResourceId()
     {
         return $this->req->getAttribute('id');
@@ -62,8 +67,17 @@ abstract class Router implements HttpRouterInterface
         if (!method_exists($this, $method)) {
             throw new HttpRequestException(__('Unsupported HTTP request method'));
         }
-
-        return $this->$method();
+        
+        try {
+            $this->$method();
+        } catch(HttpRequestException $e) {
+            
+            // define $e->getMessage() in json format like error
+            $this->res = $this->res->withJson(['errors' => [$e->getMessage()]]);
+            $this->res = $this->res->withStatus($e->getCode());
+        }
+        
+        return $this;
     }
 
     abstract protected function getList();
@@ -75,11 +89,6 @@ abstract class Router implements HttpRouterInterface
         empty($this->resourceId) 
             ? $this->getList()
             : $this->getOne();
-        
-        // todo 206 Partial Content
-        // &lt; Content-Range: 0-24/48
-        // &lt; Accept-Range: restaurant 50
-        
     }
 
     public function post()

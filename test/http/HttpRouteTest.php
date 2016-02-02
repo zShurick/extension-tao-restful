@@ -28,30 +28,24 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
         });
     }
     
-    public function testHttpGet()
+    public function testHttpGetList()
     {
-        $this->request('GET', '/resources', function ($req, $res, $args) {
+        $this->request('GET', '/resources', '/resources?range=0-3', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
-            $route->router();
-            return $res;
+            return $this->response = $route->router()->getResponse();
         });
 
-        $this->assertEquals('list of the resources', $this->response->getResourceData());
-        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals(4, count($this->response->getResourceData()));
+        $this->assertEquals(206, $this->response->getStatusCode());
+        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(['0-3/5'], $this->response->getHeader('Content-Range'));
+        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        var_dump($this->response->getHeader('List'));
     }
 
-    public function testHttpGetListPagination()
-    {
-        $this->request('GET', '/resources?range=0-25', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $route->router();
-            return $res;
-        });
-
-        $this->assertEquals('list of the resources', $this->response->getResourceData());
-        $this->assertEquals(200, $this->response->getStatusCode());
-    }
-
+    /**
+     * One resource
+     */
 
     public function testHttpGetWithResource()
     {

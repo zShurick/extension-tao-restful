@@ -20,74 +20,51 @@
 namespace oat\taoRestAPI\test\Mocks;
 
 
+use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\model\http\Request\Router;
+use oat\taoRestAPI\model\http\Response\Paginate;
 
 class TestHttpRoute extends Router
 {
-    
-    private function getRequestedRange()
-    {
-        $params = $this->req->getQueryParams();
 
-        if (isset($params['range']) && preg_match("/^\d{1,4}-\d{1,4}$/", $params['range'])) {
-            return explode('-', $params['range']);
-        }
-        
-        return [];
-    }
-    
-    private function getRequestedFilters()
-    {
-        $allowedFilters = ['filter1', 'filter2', 'filter3'];
-        $params = $this->req->getQueryParams();
-        $filters = [];
-        foreach ($allowedFilters as $filter) {
-            if (isset($params[$filter]) && !empty($params[$filter])) {
-                $filters[$filter] = $params[$filter];
-            }
-        }
-        return $filters;
-    }
-    
-    protected function getList()
-    {
-        
-        $range = $this->getRequestedRange();
-        if(count($range) == 2) {
-            if($range[0] > 0 && $range[1] < 48) {
-                $this->res = $this->res->withStatus(200, 'Ok');
-                //headers
-                /**
-                 * Content-Range: 0-47/48
-                 * Accept-Range: items 50
-                 */
-            }
-            
-            if($range[0] > 0 && $range[0] < 50 && $range[1] > 50) {
-                $this->res = $this->res->withStatus(206, 'Partial Content');
-                //headers
-                /**
-                 * Content-Range: 0-47/48
-                 * Accept-Range: items 50
-                 */
-            }
-        }
-        
-        $filters = $this->getRequestedFilters();
-        
-        $this->res->setResourceData('list of the resources');
-    }
-    
-    protected function getOne()
-    {
-        $res = 'one resource ' . $this->req->getAttribute('id');
-        // if params
-        $params = $this->req->getQueryParams();
-        $res .= (isset($params['fields']) ? ' ' . $params['fields'] : '');
-        
-        $this->res->setResourceData($res);
-    }
-    
+    private $resourcesData = [
+        [
+            'id' => 1,
+            'title' => 'Potato',
+            'type' => 'vegetable',
+            'form' => 'circle',
+            'color' => 'brown',
+        ],
+        [
+            'id' => 2,
+            'title' => 'Lemon',
+            'type' => 'citrus',
+            'form' => 'ellipse',
+            'cplpr' => 'yellow',
+        ],
+        [
+            'id' => 3,
+            'title' => 'Lime',
+            'type' => 'citrus',
+            'form' => 'ellipse',
+            'cplpr' => 'green',
+        ],
+        [
+            'id' => 4,
+            'title' => 'Carrot',
+            'type' => 'vegetable',
+            'form' => 'conical',
+            'cplpr' => 'orange',
+        ],
+        [
+            'id' => 5,
+            'title' => 'Orange',
+            'type' => 'citrus',
+            'form' => 'circle',
+            'cplpr' => 'orange',
+        ],
+    ];
+
     public function post()
     {
         parent::post();
@@ -110,5 +87,73 @@ class TestHttpRoute extends Router
     {
         parent::delete();
         return true;
+    }
+
+    protected function getList()
+    {
+        $filters = $this->getRequestedFilters();
+
+        $range = $this->getRequestedRange();
+        // in paginate should be correct offset, limit for searchInstances
+        $paginate = new Paginate($this->res, [
+            'offset' => $range[0], 
+            'limit' => $range[1], 
+            'total' => count($this->resourcesData),
+            'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
+        ]);
+        
+        $data = $this->searchInstances([
+            'offset' => $paginate->offset(),
+            'limit' => $paginate->length(),
+        ]);
+
+        $this->res->setResourceData($data);
+    }
+
+    private function getRequestedFilters()
+    {
+        $allowedFilters = ['filter1', 'filter2', 'filter3'];
+        $params = $this->req->getQueryParams();
+        $filters = [];
+        foreach ($allowedFilters as $filter) {
+            if (isset($params[$filter]) && !empty($params[$filter])) {
+                $filters[$filter] = $params[$filter];
+            }
+        }
+        return $filters;
+    }
+
+    private function getRequestedRange()
+    {
+        $params = $this->req->getQueryParams();
+
+        if (isset($params['range'])) {
+
+            if (!preg_match("/^\d{1,4}-\d{1,4}$/", $params['range'])) {
+                throw new HttpRequestException('Incorrect range parameter. Try to use: ?range=0-25', 400);
+            } else {
+                return explode('-', $params['range']);
+            }
+        }
+
+        return [0, 0];
+    }
+
+    private function searchInstances($params = [])
+    {
+        // pagination
+        $data = array_slice($this->resourcesData, $params['offset'], $params['limit']);
+        
+        return $data;
+    }
+
+    protected function getOne()
+    {
+        $res = 'one resource ' . $this->req->getAttribute('id');
+        // if params
+        $params = $this->req->getQueryParams();
+        $res .= (isset($params['fields']) ? ' ' . $params['fields'] : '');
+
+        $this->res->setResourceData($res);
     }
 }
