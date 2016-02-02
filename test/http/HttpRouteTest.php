@@ -30,17 +30,23 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
     
     public function testHttpGetList()
     {
-        $this->request('GET', '/resources', '/resources?range=0-3', function ($req, $res, $args) {
+        $this->request('GET', '/resources', '/resources?range=0-3&fields=title,type', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
             return $this->response = $route->router()->getResponse();
         });
-
+        
+        // paging
         $this->assertEquals(4, count($this->response->getResourceData()));
+        // fields
+        $this->assertEquals(2, count($this->response->getResourceData()[0]));
+
         $this->assertEquals(206, $this->response->getStatusCode());
         $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
         $this->assertEquals(['0-3/5'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
-        var_dump($this->response->getHeader('List'));
+        $this->assertEquals(4, count($this->response->getHeader('Link')));
+        
+        
     }
 
     /**

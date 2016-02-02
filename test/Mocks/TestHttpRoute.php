@@ -40,28 +40,28 @@ class TestHttpRoute extends Router
             'title' => 'Lemon',
             'type' => 'citrus',
             'form' => 'ellipse',
-            'cplpr' => 'yellow',
+            'color' => 'yellow',
         ],
         [
             'id' => 3,
             'title' => 'Lime',
             'type' => 'citrus',
             'form' => 'ellipse',
-            'cplpr' => 'green',
+            'color' => 'green',
         ],
         [
             'id' => 4,
             'title' => 'Carrot',
             'type' => 'vegetable',
             'form' => 'conical',
-            'cplpr' => 'orange',
+            'color' => 'orange',
         ],
         [
             'id' => 5,
             'title' => 'Orange',
             'type' => 'citrus',
             'form' => 'circle',
-            'cplpr' => 'orange',
+            'color' => 'orange',
         ],
     ];
 
@@ -91,9 +91,8 @@ class TestHttpRoute extends Router
 
     protected function getList()
     {
-        $filters = $this->getRequestedFilters();
-
         $range = $this->getRequestedRange();
+        
         // in paginate should be correct offset, limit for searchInstances
         $paginate = new Paginate($this->res, [
             'offset' => $range[0], 
@@ -105,28 +104,16 @@ class TestHttpRoute extends Router
         $data = $this->searchInstances([
             'offset' => $paginate->offset(),
             'limit' => $paginate->length(),
+            'fields' => $this->getRequestedFields() 
         ]);
 
         $this->res->setResourceData($data);
     }
-
-    private function getRequestedFilters()
-    {
-        $allowedFilters = ['filter1', 'filter2', 'filter3'];
-        $params = $this->req->getQueryParams();
-        $filters = [];
-        foreach ($allowedFilters as $filter) {
-            if (isset($params[$filter]) && !empty($params[$filter])) {
-                $filters[$filter] = $params[$filter];
-            }
-        }
-        return $filters;
-    }
-
+    
     private function getRequestedRange()
     {
         $params = $this->req->getQueryParams();
-
+        
         if (isset($params['range'])) {
 
             if (!preg_match("/^\d{1,4}-\d{1,4}$/", $params['range'])) {
@@ -138,11 +125,38 @@ class TestHttpRoute extends Router
 
         return [0, 0];
     }
+    
+    private function getRequestedFields()
+    {
+        $columns = [];
+        $params = $this->req->getQueryParams();
+        if (isset($params['fields'])) {
+            foreach (explode(',', $params['fields']) as $field) {
+                if (isset($this->resourcesData[0][$field])) {
+                    $columns[] = $field;
+                }
+            }
+        }
+        return $columns;
+    }
 
     private function searchInstances($params = [])
     {
+        
         // pagination
         $data = array_slice($this->resourcesData, $params['offset'], $params['limit']);
+
+        // fields
+        if (count($params['fields'])) {
+
+            foreach ($data as $k => $row) {
+                foreach ($row as $key => $value) {
+                    if (!in_array($key, $params['fields'])) {
+                        unset($data[$k][$key]);
+                    }
+                }
+            }
+        }
         
         return $data;
     }

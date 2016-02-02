@@ -13,7 +13,7 @@ use oat\taoRestAPI\model\http\Response;
 
 /**
  * Class Paginate
- * Partial content in Http request
+ * Paging in Http request
  *
  * Allow partial content, with possible HTTP responses:
  * # 200 Ok - All resources data fit in a response
