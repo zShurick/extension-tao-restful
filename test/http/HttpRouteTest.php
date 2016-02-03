@@ -1,10 +1,23 @@
 <?php
 /**
- * Copyright (c) 2016 Open Assessment Technologies, S.A.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; under version 2
+ * of the License (non-upgradable).
  *
- * @author Alexander Zagovorichev, <zagovorichev@1pt.com>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
-
 
 namespace oat\taoRestAPI\test\httpRequest;
 
@@ -27,14 +40,30 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
             return $res;
         });
     }
-    
+
+    /**
+     * Order of operations for request
+     * Searching
+     * Filtering
+     * Sorting
+     * Pagination
+     * Partial by fields
+     * For testing we used several tests and group of tests from http/Response/*Test.php
+     */
+
+    /**
+     * Global test for all operations
+     */
     public function testHttpGetList()
     {
         $this->request('GET', '/resources', '/resources?range=0-3&fields=title,type', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
             return $this->response = $route->router()->getResponse();
         });
-        
+
+        // filters
+        // search
+        // sort
         // paging
         $this->assertEquals(4, count($this->response->getResourceData()));
         // fields
@@ -45,8 +74,6 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
         $this->assertEquals(['0-3/5'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
-        
-        
     }
 
     /**
