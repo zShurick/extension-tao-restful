@@ -14,12 +14,16 @@ use oat\taoRestAPI\model\http\Response;
 /**
  * Class Paginate
  * Paging in Http request
+ * 
+ * Request 
+ * GET param like ?range=0-3
  *
+ * Response
  * Allow partial content, with possible HTTP responses:
  * # 200 Ok - All resources data fit in a response
  * # 206 Partial Content - Response only part of the resources data
  * # 400 Bad Request - Invalid requested range
- *
+ * 
  * Headers
  * "Content-Range" - 0-24/48 - [offset - limit / count]
  * "Accept-Range" - resource 50 - [resource] - type of the resources, [50] - maximum number of resources that allowed
@@ -42,13 +46,22 @@ class Paginate
      * @var array
      */
     private $options = [
-        'acceptRange' => 50,
-        'offset' => 0,
+        'query' => '',
         'limit' => 0,
+        'offset' => 0,
+        'acceptRange' => 50,
         'total' => 0,
         'paginationUrl' => '', // optional
     ];
 
+    /**
+     * Change format forced
+     * used in arithmetic op
+     * 
+     * @var array
+     */
+    private $intOptions = ['acceptRange', 'total'];
+    
     /**
      * @var Response
      */
@@ -59,14 +72,12 @@ class Paginate
         $this->response = &$response;
         
         $this->options = array_merge($this->options, $options);
-        array_walk($this->options, function (&$value) {
-            $value = intval($value);
-        });
 
-        if (isset($options['paginationUrl'])) {
-            $this->options['paginationUrl'] = $options['paginationUrl'];
+        foreach ($this->intOptions as $key) {
+            $this->options[$key] = intval($this->options[$key]);
         }
-
+        
+        $this->setRange($this->options['query']);
         $this->validate();
 
         if ($this->options['limit'] <= 0) {
@@ -80,6 +91,20 @@ class Paginate
         $this->setSuccessResponse();
     }
 
+    private function setRange( $query = '' )
+    {
+        $this->options['limit'] = $this->options['offset'] = 0;
+        
+        if (!empty($query)) {
+
+            if (!preg_match("/^\d{1,4}-\d{1,4}$/", $query)) {
+                throw new HttpRequestException('Incorrect range parameter. Try to use: ?range=0-25', 400);
+            } else {
+                list($this->options['offset'], $this->options['limit']) =  explode('-', $query);
+            }
+        }
+    }
+    
     /**
      * @throws HttpRequestException
      */

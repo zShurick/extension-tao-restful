@@ -11,47 +11,43 @@ namespace oat\taoRestAPI\model\http\Response;
 use oat\taoRestAPI\model\http\Response;
 
 /**
- * Class Filter
- * Filtering by fields
- * 
- * Response
- * GET ?field1=value1&amp;field2=value1,value3
- * 
+ * Class Partial
+ * Allow client to retrieve only the information they need
+ *  options['query'] = 'type,title'
+ *
  * @package oat\taoRestAPI\model\http\Response
  */
-class Filter
+class Partial
 {
 
-    /**
-     * @var array
-     */
     private $options = [
-        'query' => [],
+        'query' => '',
         'fields' => [],
     ];
 
-    private $filters = [];
+    private $fields = [];
 
     public function __construct(Response &$response, $options = [])
     {
+
         $this->options = array_merge($this->options, $options);
 
-        $this->setFilters();
+        $this->setFields();
     }
-    
-    public function getFilters()
+
+    private function setFields()
     {
-        return $this->filters;
-    }
-    
-    private function setFilters()
-    {
-        if (is_array($this->options['query'])) {
-            foreach ($this->options['query'] as $field => $filter) {
+        if (!empty($this->options['query'])) {
+            foreach (explode(',', $this->options['query']) as $field) {
                 if (in_array($field, $this->options['fields'])) {
-                    $this->filters[$field] = explode(',', $filter);
+                    $this->fields[] = $field;
                 }
             }
         }
+    }
+
+    public function getFields()
+    {
+        return $this->fields;
     }
 }

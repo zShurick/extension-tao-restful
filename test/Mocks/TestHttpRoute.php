@@ -22,7 +22,9 @@ namespace oat\taoRestAPI\test\Mocks;
 
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\model\http\Request\Router;
+use oat\taoRestAPI\model\http\Response\Filter;
 use oat\taoRestAPI\model\http\Response\Paginate;
+use oat\taoRestAPI\model\http\Response\Partial;
 
 class TestHttpRoute extends Router
 {
@@ -91,60 +93,72 @@ class TestHttpRoute extends Router
 
     protected function getList()
     {
-        $range = $this->getRequestedRange();
+        $queryParams = $this->req->getQueryParams();
         
         // in paginate should be correct offset, limit for searchInstances
         $paginate = new Paginate($this->res, [
-            'offset' => $range[0], 
-            'limit' => $range[1], 
+            'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
             'total' => count($this->resourcesData),
             'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
         ]);
         
+        // fields
+        $partial = new Partial($this->res, [
+            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
+            'fields' => array_keys($this->resourcesData[0]),
+        ]);
+        
+        // filter
+        $filter = new Filter($this->res, [
+            'query' => $queryParams,
+            'fields' => array_keys($this->resourcesData[0]),
+        ]);
+        
         $data = $this->searchInstances([
+
+            // get some fields
+            'fields' => $partial->getFields(),
+            
+            // search
+            
+            // sort
+            
+            // pagination
             'offset' => $paginate->offset(),
             'limit' => $paginate->length(),
-            'fields' => $this->getRequestedFields() 
+
+            // use filter
+            'filters' => $filter->getFilters(),
         ]);
 
         $this->res->setResourceData($data);
     }
-    
-    private function getRequestedRange()
-    {
-        $params = $this->req->getQueryParams();
-        
-        if (isset($params['range'])) {
-
-            if (!preg_match("/^\d{1,4}-\d{1,4}$/", $params['range'])) {
-                throw new HttpRequestException('Incorrect range parameter. Try to use: ?range=0-25', 400);
-            } else {
-                return explode('-', $params['range']);
-            }
-        }
-
-        return [0, 0];
-    }
-    
-    private function getRequestedFields()
-    {
-        $columns = [];
-        $params = $this->req->getQueryParams();
-        if (isset($params['fields'])) {
-            foreach (explode(',', $params['fields']) as $field) {
-                if (isset($this->resourcesData[0][$field])) {
-                    $columns[] = $field;
-                }
-            }
-        }
-        return $columns;
-    }
 
     private function searchInstances($params = [])
     {
+        $data = $this->resourcesData;
         
+        // filters
+        // fields with and, values with or
+        $filteredData = [];
+        if (count($params['filters'])) {
+            foreach ($data as $key => $row) {
+                foreach ($params['filters'] as $field => $filters) {
+                    if (in_array($row[$field], $filters)) {
+                        $filteredData[$key] = $row;
+                    } else {
+                        if (isset($filteredData[$key])) {
+                            unset($filteredData[$key]);
+                        }
+                        continue;
+                    }
+                }
+            }
+            $data = $filteredData;
+        }
+
         // pagination
-        $data = array_slice($this->resourcesData, $params['offset'], $params['limit']);
+        $data = array_slice($data, $params['offset'], $params['limit']);
 
         // fields
         if (count($params['fields'])) {

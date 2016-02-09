@@ -31,7 +31,7 @@ class FieldsTest extends TaoPhpUnitTestRunner
 
     use EnvironmentTrait;
 
-    public function testPartialResponse()
+    public function testFields()
     {
         $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
             $route = new TestHttpRoute($req, $res);
