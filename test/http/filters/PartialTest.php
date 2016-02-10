@@ -34,8 +34,8 @@ class FieldsTest extends TaoPhpUnitTestRunner
     public function testFields()
     {
         $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
         
         $this->assertEquals(['title', 'type'], array_keys($this->response->getResourceData()[0]));

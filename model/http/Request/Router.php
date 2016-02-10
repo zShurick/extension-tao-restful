@@ -43,16 +43,11 @@ abstract class Router implements HttpRouterInterface
      */
     private $resourceId;
     
-    public function __construct(ServerRequestInterface $req, Response $res)
+    public function __construct(ServerRequestInterface $req, Response &$res)
     {
         $this->req = $req;
-        $this->res = $res;
+        $this->res = &$res;
         $this->resourceId = $this->getResourceId();
-    }
-    
-    public function getResponse()
-    {
-        return $this->res;
     }
     
     private function getResourceId()
@@ -76,8 +71,6 @@ abstract class Router implements HttpRouterInterface
             $this->res = $this->res->withJson(['errors' => [$e->getMessage()]]);
             $this->res = $this->res->withStatus($e->getCode());
         }
-        
-        return $this;
     }
 
     abstract protected function getList();

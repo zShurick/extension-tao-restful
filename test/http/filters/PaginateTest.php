@@ -1,8 +1,22 @@
 <?php
 /**
- * Copyright (c) 2016 Open Assessment Technologies, S.A.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; under version 2
+ * of the License (non-upgradable).
  *
- * @author Alexander Zagovorichev, <zagovorichev@1pt.com>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoRestAPI\test\http\Response;
@@ -23,8 +37,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     public function testHttpGetListAll()
     {
         $this->request('GET', '/resources', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
         
         $this->assertEquals(5, count($this->response->getResourceData()));
@@ -41,8 +55,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     public function testHttpGetListEnormousRange()
     {
         $this->request('GET', '/resources', '/resources?range=0-50', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals('', $this->response->getResourceData());
@@ -60,8 +74,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     public function testHttpGetListOutsideRange()
     {
         $this->request('GET', '/resources', '/resources?range=50-51', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals('', $this->response->getResourceData());
@@ -80,8 +94,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     {
         // incorrect range
         $this->request('GET', '/resources', '/resources?range=3-2', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals('', $this->response->getResourceData());
@@ -94,8 +108,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
 
         // less then 0
         $this->request('GET', '/resources', '/resources?range=-1-2', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals('', $this->response->getResourceData());
@@ -114,8 +128,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     public function testHttpGetListLastRange()
     {
         $this->request('GET', '/resources', '/resources?range=3-7', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals(2, count($this->response->getResourceData()));
@@ -132,8 +146,8 @@ class PaginateTest extends TaoPhpUnitTestRunner
     public function testHttpGetListRange()
     {
         $this->request('GET', '/resources', '/resources?range=0-3', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            return $this->response = $route->router()->getResponse();
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
         $this->assertEquals(4, count($this->response->getResourceData()));

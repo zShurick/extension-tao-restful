@@ -22,23 +22,38 @@
 namespace oat\taoRestAPI\model\http;
 
 
-use Slim\Http\Response as HttpResponse;
-
-class Response extends HttpResponse
+abstract class AbstractFilter
 {
+
     /**
-     * Source data for response, if needed for data handling
-     * @var mixed
+     * Options for filters
+     * @var array
+     *  [
+     *      query => string|array from Response
+     *  ]
      */
-    private $resourceData;
-    
-    public function setResourceData( $data )
+    protected $options = ['query' => ''];
+
+    /**
+     * @var Response
+     */
+    protected $response;
+
+    /**
+     * Filters constructor.
+     * @param Response $response - We can change headers for response in filter
+     * @param array $options
+     */
+    public function __construct(Response &$response, $options = [])
     {
-        $this->resourceData = $data;
+        $this->response = &$response;
+        $this->options = array_merge($this->options, $options);
+        $this->prepare();
     }
-    
-    public function getResourceData()
-    {
-        return $this->resourceData;
-    }
+
+    /**
+     * Prepare data for filtering
+     * @return mixed
+     */
+    abstract protected function prepare();
 }

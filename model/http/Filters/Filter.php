@@ -19,26 +19,46 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\http;
+namespace oat\taoRestAPI\model\http\filters;
 
 
-use Slim\Http\Response as HttpResponse;
+use oat\taoRestAPI\model\http\AbstractFilter;
 
-class Response extends HttpResponse
+/**
+ * Class Filter
+ * Filtering by field values
+ * 
+ * Response
+ * GET ?field1=value1&amp;field2=value1,value3
+ * 
+ * @package oat\taoRestAPI\model\http\Response
+ */
+class Filter extends AbstractFilter
 {
+
     /**
-     * Source data for response, if needed for data handling
-     * @var mixed
+     * @var array
      */
-    private $resourceData;
+    protected $options = [
+        'query' => [],
+        'fields' => [],
+    ];
+
+    private $filters = [];
     
-    public function setResourceData( $data )
+    public function getFilters()
     {
-        $this->resourceData = $data;
+        return $this->filters;
     }
     
-    public function getResourceData()
+    protected function prepare()
     {
-        return $this->resourceData;
+        if (is_array($this->options['query'])) {
+            foreach ($this->options['query'] as $field => $filter) {
+                if (in_array($field, $this->options['fields'])) {
+                    $this->filters[$field] = explode(',', $filter);
+                }
+            }
+        }
     }
 }

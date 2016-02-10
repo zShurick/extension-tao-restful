@@ -20,11 +20,11 @@
 namespace oat\taoRestAPI\test\Mocks;
 
 
-use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\model\http\filters\Filter;
+use oat\taoRestAPI\model\http\filters\Paginate;
+use oat\taoRestAPI\model\http\filters\Partial;
+use oat\taoRestAPI\model\http\filters\Sort;
 use oat\taoRestAPI\model\http\Request\Router;
-use oat\taoRestAPI\model\http\Response\Filter;
-use oat\taoRestAPI\model\http\Response\Paginate;
-use oat\taoRestAPI\model\http\Response\Partial;
 
 class TestHttpRoute extends Router
 {
@@ -94,35 +94,32 @@ class TestHttpRoute extends Router
     protected function getList()
     {
         $queryParams = $this->req->getQueryParams();
-        
-        // in paginate should be correct offset, limit for searchInstances
+
+        $partial = new Partial($this->res, [
+            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
+            'fields' => array_keys($this->resourcesData[0]),
+        ]);
+
         $paginate = new Paginate($this->res, [
             'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
             'total' => count($this->resourcesData),
             'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
         ]);
-        
-        // fields
-        $partial = new Partial($this->res, [
-            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->resourcesData[0]),
-        ]);
-        
-        // filter
+
+        $sort = new Sort($this->res, ['query' => $queryParams]);
+
         $filter = new Filter($this->res, [
             'query' => $queryParams,
             'fields' => array_keys($this->resourcesData[0]),
         ]);
-        
+
         $data = $this->searchInstances([
 
-            // get some fields
             'fields' => $partial->getFields(),
-            
-            // search
-            
+
             // sort
-            
+            'sortBy' => $sort->getSorting(),
+
             // pagination
             'offset' => $paginate->offset(),
             'limit' => $paginate->length(),
@@ -131,13 +128,15 @@ class TestHttpRoute extends Router
             'filters' => $filter->getFilters(),
         ]);
 
+        $paginate->correctPaginationHeader(count($data));
+        
         $this->res->setResourceData($data);
     }
 
     private function searchInstances($params = [])
     {
         $data = $this->resourcesData;
-        
+
         // filters
         // fields with and, values with or
         $filteredData = [];
@@ -156,6 +155,34 @@ class TestHttpRoute extends Router
             }
             $data = $filteredData;
         }
+        
+        // sort
+        if (count($params['sortBy'])) {
+            $sorting = [];
+            
+            if (!isset($params['sortBy']['desc'])) {
+                $params['sortBy']['desc'] = [];
+            }
+
+            foreach ($params['sortBy']['sort'] as $field) {
+                $column = [];
+                foreach ($data as $key => $row) {
+                    $column[$key] = $row[$field];
+                }
+
+                $sorting[] = $column;
+                
+                if (in_array($field, $params['sortBy']['desc'])) {
+                    $sorting[] = SORT_DESC;
+                } else {
+                    $sorting[] = SORT_ASC;
+                }
+            }
+
+            $sorting[] = &$data;
+            call_user_func_array('array_multisort', $sorting);
+            $data = array_pop($sorting);
+        }
 
         // pagination
         $data = array_slice($data, $params['offset'], $params['limit']);
@@ -171,7 +198,7 @@ class TestHttpRoute extends Router
                 }
             }
         }
-        
+
         return $data;
     }
 
