@@ -79,13 +79,13 @@ class TestHttpRoute extends Router
 
     /**
      * Create new resource
-     * 
+     *
      * @throws HttpRequestException
      */
     public function post()
     {
         parent::post();
-        
+
         $resource = $this->req->getParsedBody();
         // without data
         if (!$resource) {
@@ -94,12 +94,12 @@ class TestHttpRoute extends Router
         // data validation
         $ids = [];
         foreach ($this->resourcesData as $row) {
-            $ids[] = $row['id']; 
+            $ids[] = $row['id'];
         }
-        if(in_array($resource['id'], $ids)) {
-            throw new HttpRequestException('Resource with id='.$resource['id'].' exists.', 400);
+        if (in_array($resource['id'], $ids)) {
+            throw new HttpRequestException('Resource with id=' . $resource['id'] . ' exists.', 400);
         }
-        
+
         //creating
         $this->resourcesData[] = $resource;
         $this->res = $this->res->withHeader('Location', (string)$this->req->getUri() . '/' . $resource['id']);
@@ -115,26 +115,51 @@ class TestHttpRoute extends Router
         if (!$resource) {
             throw new HttpRequestException('Empty Request data.', 400);
         }
+        if (!isset($resource['id'])) {
+            throw new HttpRequestException('Id is required', 400);
+        }
+
         // data validation
         $ids = [];
         foreach ($this->resourcesData as $key => $row) {
             $ids[$key] = $row['id'];
         }
-        if(!in_array($resource['id'], $ids)) {
-            throw new HttpRequestException('Resource with id='.$resource['id'].' not exists.', 400);
+        if (!in_array($this->getResourceId(), $ids)) {
+            throw new HttpRequestException('Resource with id=' . $this->getResourceId() . ' not exists.', 400);
         }
-        
-        //update
-        $updResource = &$this->resourcesData[array_search($this->getResourceId(), $ids)];
-        foreach ($resource as $key => $value) {
-            $updResource[$key] = $value;
-        }
+
+        //replace
+        $this->resourcesData[array_search($this->getResourceId(), $ids)] = $resource;
     }
 
     public function patch()
     {
         parent::patch();
-        return 'resource updated partially';
+
+        $resource = $this->req->getParsedBody();
+
+        // without data
+        if (!$resource) {
+            throw new HttpRequestException('Empty Request data.', 400);
+        }
+        // data validation
+        if (isset($resource['id']) && $resource['id'] !== $this->getResourceId()) {
+            throw new HttpRequestException('Invalid Id', 400);
+        }
+        
+        $ids = [];
+        foreach ($this->resourcesData as $key => $row) {
+            $ids[$key] = $row['id'];
+        }
+        if (!in_array($this->getResourceId(), $ids)) {
+            throw new HttpRequestException('Resource with id=' . $resource['id'] . ' not exists.', 400);
+        }
+
+        //update
+        $updResource = &$this->resourcesData[array_search($this->getResourceId(), $ids)];
+        foreach ($resource as $key => $value) {
+            $updResource[$key] = $value;
+        }
     }
 
     public function delete()
@@ -181,7 +206,7 @@ class TestHttpRoute extends Router
         ]);
 
         $paginate->correctPaginationHeader(count($data));
-        
+
         $this->res->setResourceData($data);
     }
 
@@ -207,11 +232,11 @@ class TestHttpRoute extends Router
             }
             $data = $filteredData;
         }
-        
+
         // sort
         if (count($params['sortBy'])) {
             $sorting = [];
-            
+
             if (!isset($params['sortBy']['desc'])) {
                 $params['sortBy']['desc'] = [];
             }
@@ -223,7 +248,7 @@ class TestHttpRoute extends Router
                 }
 
                 $sorting[] = $column;
-                
+
                 if (in_array($field, $params['sortBy']['desc'])) {
                     $sorting[] = SORT_DESC;
                 } else {
@@ -275,7 +300,7 @@ class TestHttpRoute extends Router
                 unset($resource[$key]);
             }
         }
-        
+
         $this->res->setResourceData($resource);
     }
 }

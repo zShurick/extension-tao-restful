@@ -255,42 +255,201 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
         $routing = null;
         $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
             $routing = new TestHttpRoute($request, $res);
-            $this->assertNotEquals($routing->getResources()[0], $putData);
+            $this->assertNotEquals($putData, $routing->getResources()[0]);
             $routing->router();
             return $this->response = $res;
         });
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals($routing->getResources()[0], $putData);
+        $this->assertEquals($putData, $routing->getResources()[0]);
     }
-    
+
+    public function testHttpPartialPut()
+    {
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'PUT',
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        // add Attribute in request
+        $request = $request->withAttribute('id', 1);
+        $putData = [
+            'id' => 1,
+            'title' => 'Potato',
+            'color' => 'vegetable',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $this->assertNotEquals($putData, $routing->getResources()[0]);
+            $routing->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals($putData, $routing->getResources()[0]);
+        $this->assertEquals(3, count($routing->getResources()[0]));
+    }
+
+    public function testHttpPutInvalidData()
+    {
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'PUT',
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        // add Attribute in request
+        $request = $request->withAttribute('id', 1);
+        $putData = [
+            'title' => 'Potato',
+            'color' => 'vegetable',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $this->assertNotEquals($putData, $routing->getResources()[0]);
+            $routing->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertNotEquals($putData, $routing->getResources()[0]);
+    }
 
     /**
-     * @expectedException \oat\taoRestAPI\exception\HttpRequestException
+     * Partial data update
+     * Update only the specified data
      */
-/*    public function testHttpPutException()
-    {
-        $this->request('PUT', '/resources', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
-
-            return $res;
-        });
-    }
-
     public function testHttpPatch()
     {
-        $this->request('PATCH', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'PATCH',
+        ]);
 
-            return $res;
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        // add Attribute in request
+        $request = $request->withAttribute('id', 1);
+        $putData = [
+            'title' => 'Carrot',
+            'color' => 'orange',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PATCH', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $routing->router();
+            return $this->response = $res;
         });
 
-        $this->assertEquals('resource updated partially', (string)$this->response->getBody());
-    }*/
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals(5, count($routing->getResources()[0]));
+        $this->assertEquals('Carrot', $routing->getResources()[0]['title']);
+        $this->assertEquals('orange', $routing->getResources()[0]['color']);
+    }
 
+    public function testHttpPatchOnListOfTheData()
+    {
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources',
+            'REQUEST_METHOD' => 'PATCH',
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        // add Attribute in request
+        $putData = [
+            'title' => 'Carrot',
+            'color' => 'orange',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PATCH', '/resources', '/resources', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $routing->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertEquals('{"errors":["You can\'t update list of the resources"]}', (string)$this->response->getBody());
+    }
+
+    public function testHttpPatchWithError()
+    {
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'PATCH',
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        // add Attribute in request
+        $request = $request->withAttribute('id', 1);
+        $putData = [
+            'id' => 2,
+            'title' => 'Carrot',
+            'color' => 'orange',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PATCH', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $routing->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertEquals('{"errors":["Invalid Id"]}', (string)$this->response->getBody());
+    }
+    
     /**
      * @expectedException \oat\taoRestAPI\exception\HttpRequestException
      */
