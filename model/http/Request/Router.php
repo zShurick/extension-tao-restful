@@ -47,12 +47,17 @@ abstract class Router implements HttpRouterInterface
     {
         $this->req = $req;
         $this->res = &$res;
-        $this->resourceId = $this->getResourceId();
+        $this->setResourceId();
     }
     
-    private function getResourceId()
+    private function setResourceId()
     {
-        return $this->req->getAttribute('id');
+        $this->resourceId =  $this->req->getAttribute('id');
+    }
+    
+    protected function getResourceId() 
+    {
+        return $this->resourceId;
     }
 
     public function router()
@@ -60,7 +65,7 @@ abstract class Router implements HttpRouterInterface
         $method = strtolower($this->req->getMethod());
 
         if (!method_exists($this, $method)) {
-            throw new HttpRequestException(__('Unsupported HTTP request method'));
+            throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
         }
         
         try {
@@ -87,16 +92,16 @@ abstract class Router implements HttpRouterInterface
     public function post()
     {
         if (!empty($this->resourceId)) {
-            throw new HttpRequestException(__('You can\'t create new resource on object'));
+            throw new HttpRequestException(__('You can\'t create new resource on object'), 400);
         }
-        $this->res->withStatus(201);
+        
+        $this->res = $this->res->withStatus(201);
     }
 
     public function put()
     {
-        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
-            throw new HttpRequestException(__('You can\'t update list of the resources'));
+            throw new HttpRequestException(__('You can\'t update list of the resources'), 400);
         }
     }
 
@@ -104,7 +109,7 @@ abstract class Router implements HttpRouterInterface
     {
         $this->res->withStatus(200);
         if (empty($this->resourceId)) {
-            throw new HttpRequestException(__('You can\'t update list of the resources'));
+            throw new HttpRequestException(__('You can\'t update list of the resources'), 400);
         }
     }
 
@@ -112,7 +117,7 @@ abstract class Router implements HttpRouterInterface
     {
         $this->res->withStatus(200);
         if (empty($this->resourceId)) {
-            throw new HttpRequestException(__('You can\'t delete list of the resources'));
+            throw new HttpRequestException(__('You can\'t delete list of the resources'), 400);
         }
     }
 

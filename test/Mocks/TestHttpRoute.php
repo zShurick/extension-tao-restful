@@ -20,6 +20,7 @@
 namespace oat\taoRestAPI\test\Mocks;
 
 
+use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\model\http\filters\Filter;
 use oat\taoRestAPI\model\http\filters\Paginate;
 use oat\taoRestAPI\model\http\filters\Partial;
@@ -67,16 +68,67 @@ class TestHttpRoute extends Router
         ],
     ];
 
+    /**
+     * For phpunit testing data changing (put, post, delete, patch)
+     * @return array
+     */
+    public function getResources()
+    {
+        return $this->resourcesData;
+    }
+
+    /**
+     * Create new resource
+     * 
+     * @throws HttpRequestException
+     */
     public function post()
     {
         parent::post();
-        return 'resource created';
+        
+        $resource = $this->req->getParsedBody();
+        // without data
+        if (!$resource) {
+            throw new HttpRequestException('Empty Request data.', 400);
+        }
+        // data validation
+        $ids = [];
+        foreach ($this->resourcesData as $row) {
+            $ids[] = $row['id']; 
+        }
+        if(in_array($resource['id'], $ids)) {
+            throw new HttpRequestException('Resource with id='.$resource['id'].' exists.', 400);
+        }
+        
+        //creating
+        $this->resourcesData[] = $resource;
+        $this->res = $this->res->withHeader('Location', (string)$this->req->getUri() . '/' . $resource['id']);
     }
 
     public function put()
     {
         parent::put();
-        return 'resource updated';
+
+        $resource = $this->req->getParsedBody();
+
+        // without data
+        if (!$resource) {
+            throw new HttpRequestException('Empty Request data.', 400);
+        }
+        // data validation
+        $ids = [];
+        foreach ($this->resourcesData as $key => $row) {
+            $ids[$key] = $row['id'];
+        }
+        if(!in_array($resource['id'], $ids)) {
+            throw new HttpRequestException('Resource with id='.$resource['id'].' not exists.', 400);
+        }
+        
+        //update
+        $updResource = &$this->resourcesData[array_search($this->getResourceId(), $ids)];
+        foreach ($resource as $key => $value) {
+            $updResource[$key] = $value;
+        }
     }
 
     public function patch()
@@ -204,11 +256,26 @@ class TestHttpRoute extends Router
 
     protected function getOne()
     {
-        $res = 'one resource ' . $this->req->getAttribute('id');
-        // if params
-        $params = $this->req->getQueryParams();
-        $res .= (isset($params['fields']) ? ' ' . $params['fields'] : '');
+        $queryParams = $this->req->getQueryParams();
 
-        $this->res->setResourceData($res);
+        $resource = [];
+        foreach ($this->resourcesData as $resource) {
+            if ($resource['id'] == $this->req->getAttribute('id')) {
+                break;
+            }
+        }
+
+        $partial = new Partial($this->res, [
+            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
+            'fields' => array_keys($this->resourcesData[0]),
+        ]);
+
+        foreach ($resource as $key => $value) {
+            if (!in_array($key, $partial->getFields())) {
+                unset($resource[$key]);
+            }
+        }
+        
+        $this->res->setResourceData($resource);
     }
 }

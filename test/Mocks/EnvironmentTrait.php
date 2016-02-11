@@ -86,6 +86,7 @@ trait EnvironmentTrait
             'QUERY_STRING' => $queryString,
             'REQUEST_METHOD' => $requestMethod,
         ]);
+        
         $uri = Uri::createFromEnvironment($env);
         $headers = Headers::createFromEnvironment($env);
         $cookies = [];

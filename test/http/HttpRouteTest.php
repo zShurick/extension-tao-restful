@@ -25,6 +25,8 @@ namespace oat\taoRestAPI\test\httpRequest;
 use oat\tao\test\TaoPhpUnitTestRunner;
 use oat\taoRestAPI\test\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\Mocks\TestHttpRoute;
+use Slim\Http\Environment;
+use Slim\Http\Request;
 
 class HttpRouteTest extends TaoPhpUnitTestRunner
 {
@@ -43,12 +45,11 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
 
     /**
      * Order of operations for request
-     * Searching
      * Filtering
      * Sorting
      * Pagination
      * Partial by fields
-     * For testing we used several tests and group of tests from http/Response/*Test.php
+     * For testing we used several tests and group of tests from http/filters/*Test.php
      */
 
     public function testHttpGetSortedPartialRangeOfList()
@@ -98,69 +99,172 @@ class HttpRouteTest extends TaoPhpUnitTestRunner
     }
 
     /**
-     * One resource
+     * Get one resource
      */
-/*
     public function testHttpGetWithResource()
     {
         $this->request('GET', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $route->router();
-            return $res;
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
 
-        $this->assertEquals('one resource 1', $this->response->getResourceData());
+        $this->assertEquals(5, count($this->response->getResourceData()));
+        $this->assertEquals(1, $this->response->getResourceData()['id']);
         $this->assertEquals(200, $this->response->getStatusCode());
     }
-    
-    public function testHttpGetWithResourceWithParams()
-    {
-        $this->request('GET', '/resources/{id}', '/resources/1?fields=field1,field2', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $route->router();
-            return $res;
-        });
-
-        $this->assertEquals('one resource 1 field1,field2', $this->response->getResourceData());
-        $this->assertEquals(200, $this->response->getStatusCode());
-    }
-    
-    public function testHttpPost()
-    {
-        $this->request('POST', '/resources', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
-
-            return $res;
-        });
-
-        $this->assertEquals('resource created', (string)$this->response->getBody());
-    }*/
 
     /**
-     * @expectedException \oat\taoRestAPI\exception\HttpRequestException
+     * Get one resource partial
      */
-/*    public function testHttpPostException()
+    public function testHttpGetWithResourceWithParams()
     {
-        $this->request('POST', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
-
-            return $res;
+        $this->request('GET', '/resources/{id}', '/resources/5?fields=id,title,form', function ($req, $res, $args) {
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
         });
+
+        $this->assertEquals(3, count($this->response->getResourceData()));
+        $this->assertEquals(5, $this->response->getResourceData()['id']);
+        $this->assertEquals('Orange', $this->response->getResourceData()['title']);
+        $this->assertEquals('circle', $this->response->getResourceData()['form']);
+        $this->assertEquals(200, $this->response->getStatusCode());
     }
 
-    public function testHttpPut()
+    /**
+     * Create new resource
+     */
+    public function testHttpPost()
     {
-        $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            $route = new TestHttpRoute($req, $res);
-            $res->write($route->router());
+        // replace default post to post with data
+        $_POST = [
+            'id' => 7,
+            'title' => 'beet',
+            'type' => 'vegetable',
+            'form' => 'ellipse',
+            'color' => 'brown',
+        ];
 
-            return $res;
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources',
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_CONTENT_TYPE' => 'multipart/form-data;'
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        $this->request('POST', '/resources', function ($req, $res, $args) use ($request) {
+            (new TestHttpRoute($request, $res))->router();
+            return $this->response = $res;
         });
 
-        $this->assertEquals('resource updated', (string)$this->response->getBody());
-    }*/
+        $this->assertEquals(201, $this->response->getStatusCode());
+        $this->assertEquals('Created', $this->response->getReasonPhrase());
+        $this->assertEquals([$this->request->getUri() . '/7'], $this->response->getHeader('Location'));
+    }
+    
+    public function testHttpPostInvalidData()
+    {
+        // replace default post to post with data
+        $_POST = [
+            'id' => 1,
+            'title' => 'beet',
+            'type' => 'vegetable',
+            'form' => 'ellipse',
+            'color' => 'brown',
+        ];
+
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources',
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_CONTENT_TYPE' => 'multipart/form-data;'
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+
+        $this->request('POST', '/resources', function ($req, $res, $args) use ($request) {
+            (new TestHttpRoute($request, $res))->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertEquals('{"errors":["Resource with id=1 exists."]}', (string)$this->response->getBody());
+        $this->assertFalse($this->response->hasHeader('Location'));
+    }
+
+    public function testHttpPostWithoutData()
+    {
+        $this->request('POST', '/resources', function ($req, $res, $args) {
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertEquals('{"errors":["Empty Request data."]}', (string)$this->response->getBody());
+        $this->assertFalse($this->response->hasHeader('Location'));
+    }
+
+    public function testHttpPostException()
+    {
+        $this->request('POST', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            (new TestHttpRoute($req, $res))->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(400, $this->response->getStatusCode());
+        $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
+        $this->assertEquals('{"errors":["You can\'t create new resource on object"]}', (string)$this->response->getBody());
+        $this->assertFalse($this->response->hasHeader('Location'));
+    }
+
+    /**
+     * Update full resource data
+     * Update only fields that is set, all the other fields will be deleted
+     */
+    public function testHttpPut()
+    {
+        // replace default body data
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'PUT',
+        ]);
+
+        $request = Request::createFromEnvironment($env);
+        unset($_POST);
+        
+        // add Attribute in request
+        $request = $request->withAttribute('id', 1);
+        $putData = [
+            'id' => 1,
+            'title' => 'beef',
+            'type' => 'meat',
+            'form' => 'circle',
+            'color' => 'brown',
+        ];
+        $request = $request->withParsedBody($putData);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+
+        /** @var TestHttpRoute $routing */
+        $routing = null;
+        $this->request('PUT', '/resources/{id}', '/resources/1', function ($req, $res, $args) use ($request, &$routing, $putData) {
+            $routing = new TestHttpRoute($request, $res);
+            $this->assertNotEquals($routing->getResources()[0], $putData);
+            $routing->router();
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals($routing->getResources()[0], $putData);
+    }
+    
 
     /**
      * @expectedException \oat\taoRestAPI\exception\HttpRequestException
