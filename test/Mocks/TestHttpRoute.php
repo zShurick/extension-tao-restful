@@ -152,7 +152,7 @@ class TestHttpRoute extends Router
             $ids[$key] = $row['id'];
         }
         if (!in_array($this->getResourceId(), $ids)) {
-            throw new HttpRequestException('Resource with id=' . $resource['id'] . ' not exists.', 400);
+            throw new HttpRequestException('Resource with id=' . $this->getResourceId() . ' not exists.', 400);
         }
 
         //update
@@ -165,7 +165,17 @@ class TestHttpRoute extends Router
     public function delete()
     {
         parent::delete();
-        return true;
+
+        $ids = [];
+        foreach ($this->resourcesData as $key => $row) {
+            $ids[$key] = $row['id'];
+        }
+        if (in_array($this->getResourceId(), $ids)) {
+
+            unset($this->resourcesData[array_search($this->getResourceId(), $ids)]);
+            
+        }
+        
     }
 
     protected function getList()

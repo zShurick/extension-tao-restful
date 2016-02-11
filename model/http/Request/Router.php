@@ -107,7 +107,6 @@ abstract class Router implements HttpRouterInterface
 
     public function patch()
     {
-        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t update list of the resources'), 400);
         }
@@ -115,7 +114,6 @@ abstract class Router implements HttpRouterInterface
 
     public function delete()
     {
-        $this->res->withStatus(200);
         if (empty($this->resourceId)) {
             throw new HttpRequestException(__('You can\'t delete list of the resources'), 400);
         }
@@ -123,9 +121,10 @@ abstract class Router implements HttpRouterInterface
 
     public function options()
     {
-        $this->res->withStatus(200);
-        return empty($this->resourceId)
+        $allowed =  empty($this->resourceId)
             ? ['POST', 'GET', 'OPTIONS']
             : ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+        
+        $this->res = $this->res->withJson($allowed);
     }
 }
