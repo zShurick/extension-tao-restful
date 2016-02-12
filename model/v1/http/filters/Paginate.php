@@ -23,6 +23,7 @@ namespace oat\taoRestAPI\model\v1\http\filters;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
 use oat\taoRestAPI\model\v1\http\AbstractFilter;
 
 /**
@@ -61,8 +62,8 @@ class Paginate extends AbstractFilter
      */
     protected $options = [
         'query' => '',
-        'limit' => 0,
-        'offset' => 0,
+        'limit' => false,
+        'offset' => false,
         'acceptRange' => 50,
         'total' => 0,
         'paginationUrl' => '', // optional
@@ -88,17 +89,78 @@ class Paginate extends AbstractFilter
 
     /**
      * After query to DB with all filters, paste in Content-Range real values
-     * @param int $loaded - the number of uploaded data
+     * @param int $loaded - the count of uploaded data
+     * @param $totalFiltered - count of uploaded data without pagination
      */
-    public function correctPaginationHeader($loaded = 0)
+    public function correctPaginationHeader($loaded = 0, $totalFiltered = 0)
     {
         if ($loaded) {
-            if ( $this->options['offset'] <= 0 ) {
-                $loaded--;
-            }
             $this->options['limit'] = $this->options['offset'] + $loaded;
+            $this->options['total'] = $totalFiltered;
             $this->setSuccessResponse();
         }
+    }
+
+    private function setSuccessResponse()
+    {
+        if ($this->options['offset'] == 0 && $this->options['limit'] >= $this->options['total']
+            && $this->options['limit'] < $this->options['acceptRange']
+        ) {
+            // all data in response
+            $this->setStatusCode(200);
+            $this->addHeader('Content-Range', $this->options['offset'] . '-' . ($this->options['limit']-1) . '/' . $this->options['total']);
+            $this->addHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
+        }
+        else {
+            // range is smaller than count records
+            $this->setStatusCode(206);
+
+            $limit = $this->options['limit'];
+            if ($limit >= $this->options['total']) {
+                $limit = $this->options['total'] - 1;
+            } else {
+                --$limit;
+            }
+
+            $this->addHeader('Content-Range', $this->options['offset'] . '-' . $limit . '/' . $this->options['total']);
+            $this->addHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
+
+            if ($this->options['paginationUrl']) {
+                $this->paginationLinks();
+            }
+        }
+    }
+
+    /** From router get link and generate new pagination Http header
+     * Example:
+     *  $link = http://api.taotesting.com/v1/items?range=
+     *  $link = http://api.taotesting.com/v1/items?fields=field1,field2&sort=field1,field2&range=
+     */
+    private function paginationLinks()
+    {
+        $length = $this->options['limit'] - $this->options['offset'];
+
+        $pages['first'] = '0-' . ($length - 1);
+        $pages['last'] = ($this->options['total'] - $length) . '-' . ($this->options['total'] - 1);
+
+        $pages['prev'] = $this->options['offset'] - $length < 0
+            ? $pages['last']
+            : ($this->options['offset'] - $length) . '-' . ($this->options['offset'] - 1);
+
+        if ($this->options['offset'] + $length >= $this->options['total']) {
+            $pages['next'] = $pages['first'];
+        } elseif ($this->options['limit'] + $length >= $this->options['total'] && $this->options['offset'] + 1 < $this->options['total']) {
+            $pages['next'] = $this->options['limit'] . '-' . ($this->options['total']-1);
+        } else {
+            $pages['next'] = ($this->options['offset'] + $length) . '-' . ($this->options['limit'] + $length - 1);
+        }
+        
+        $links = [];
+        foreach ($pages as $rel => $range) {
+            $links[] = '&lt;' . $this->options['paginationUrl'] . $range . '&gt;; rel="' . $rel . '"';
+        }
+
+        $this->addHeader('Link', $links);
     }
 
     protected function prepare()
@@ -106,20 +168,19 @@ class Paginate extends AbstractFilter
         $this->setRange($this->options['query']);
         $this->validate();
 
-        if ($this->options['limit'] <= 0) {
+        if ($this->options['limit'] < 0 || $this->options['limit'] === false) {
             $this->options['limit'] = $this->options['total'] < $this->options['acceptRange']
                 ? $this->options['total']
                 : $this->options['acceptRange'];
 
             --$this->options['limit'];
         }
-
-        //$this->setSuccessResponse();
     }
 
     private function setRange($query = '')
     {
-        $this->options['limit'] = $this->options['offset'] = 0;
+        $this->options['limit'] = $this->options['total'] - 1;
+        $this->options['offset'] = 0;
 
         if (!empty($query)) {
 
@@ -137,11 +198,9 @@ class Paginate extends AbstractFilter
     private function validate()
     {
         if ($this->options['acceptRange'] <= 0) {
-            $this->response = $this->response->withAddedHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
-            throw new HttpRequestException('Invalid acceptRange', 400);
+            throw new HttpRequestExceptionWithHeaders('Invalid acceptRange', 400, ['Accept-Range' => 'resource ' . $this->options['acceptRange']]);
         } elseif ($this->options['total'] <= 0) {
-            $this->response = $this->response->withAddedHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
-            throw new HttpRequestException('Empty response data', 400);
+            throw new HttpRequestExceptionWithHeaders('Empty response data', 400, ['Accept-Range' => 'resource ' . $this->options['acceptRange']]);
         } elseif (
             // enormous range
             ($this->options['limit'] - $this->options['offset']) >= $this->options['total']
@@ -152,66 +211,8 @@ class Paginate extends AbstractFilter
             || $this->options['offset'] < 0
 
         ) {
-            $this->response = $this->response->withAddedHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
-            throw new HttpRequestException('Invalid range', 400);
+            throw new HttpRequestExceptionWithHeaders('Invalid range', 400, ['Accept-Range' => 'resource ' . $this->options['acceptRange']]);
         }
 
-    }
-
-    private function setSuccessResponse()
-    {
-        // all data in response
-        if ($this->options['offset'] == 0 && $this->options['limit'] >= ($this->options['total'] - 1)
-            && $this->options['limit'] < $this->options['acceptRange']
-        ) {
-
-            $this->response = $this->response->withStatus(200, 'OK');
-            $this->response = $this->response->withAddedHeader('Content-Range', $this->options['offset'] . '-' . $this->options['limit'] . '/' . $this->options['total']);
-            $this->response = $this->response->withAddedHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
-        } // range is smaller than count records
-        else {
-
-            $this->response = $this->response->withStatus(206, 'Partial Content');
-
-            $limit = $this->options['limit'];
-
-            if ($limit >= $this->options['total']) {
-                $limit = $this->options['total'] - 1;
-            }
-            $this->response = $this->response->withAddedHeader('Content-Range', $this->options['offset'] . '-' . $limit . '/' . $this->options['total']);
-            $this->response = $this->response->withAddedHeader('Accept-Range', 'resource ' . $this->options['acceptRange']);
-
-            if ($this->options['paginationUrl']) {
-                $this->paginationLinks();
-            }
-        }
-    }
-
-    /** From router get link and generate new pagination Http header
-     * Example:
-     *  $link = http://api.taotesting.com/v1/items?range=
-     *  $link = http://api.taotesting.com/v1/items?fields=field1,field2&sort=field1,field2&range=
-     */
-    private function paginationLinks()
-    {
-        $length = $this->options['limit'] - $this->options['offset'] + 1;
-
-        $pages['first'] = '0-' . ($length - 1);
-        $pages['last'] = ($this->options['total'] - $length) . '-' . ($this->options['total'] - 1);
-
-        $pages['prev'] = $this->options['offset'] - $length < 0
-            ? $pages['last']
-            : ($this->options['offset'] - $length) . '-' . ($this->options['offset'] - 1);
-
-        $pages['next'] = $this->options['limit'] + 1 >= $this->options['total']
-            ? $pages['first']
-            : ($this->options['limit'] + 1) . '-' . ($this->options['limit'] + $length);
-
-        $links = [];
-        foreach ($pages as $rel => $range) {
-            $links[] = '&lt;' . $this->options['paginationUrl'] . $range . '&gt;; rel="' . $rel . '"';
-        }
-
-        $this->response = $this->response->withAddedHeader('Link', $links);
     }
 }

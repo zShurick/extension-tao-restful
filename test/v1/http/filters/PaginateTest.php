@@ -23,9 +23,7 @@ namespace oat\taoRestAPI\test\v1\http\Response;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 
 class PaginateTest extends TaoPhpUnitTestRunner
 {
@@ -40,10 +38,11 @@ class PaginateTest extends TaoPhpUnitTestRunner
         $this->request('GET', '/resources', function ($req, $res, $args) {
             return $this->routerRunner($req, $res, $args);
         });
-        
-        $this->assertEquals(5, count($this->response->getResourceData()));
+
+        $this->assertEquals('', (string)$this->response->getBody());
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals(5, count($this->response->getResourceData()));
         $this->assertEquals(['0-4/5'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(0, count($this->response->getHeader('Link')));
@@ -131,6 +130,13 @@ class PaginateTest extends TaoPhpUnitTestRunner
         $this->assertEquals(['3-4/5'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals([
+                '&lt;http://api.taotest.example/v1/items?range=0-1&gt;; rel="first"',
+                '&lt;http://api.taotest.example/v1/items?range=3-4&gt;; rel="last"',
+                '&lt;http://api.taotest.example/v1/items?range=1-2&gt;; rel="prev"',
+                '&lt;http://api.taotest.example/v1/items?range=0-1&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
+        
     }
 
     /**
@@ -148,6 +154,71 @@ class PaginateTest extends TaoPhpUnitTestRunner
         $this->assertEquals(['0-3/5'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals([
+            '&lt;http://api.taotest.example/v1/items?range=0-3&gt;; rel="first"',
+            '&lt;http://api.taotest.example/v1/items?range=1-4&gt;; rel="last"',
+            '&lt;http://api.taotest.example/v1/items?range=1-4&gt;; rel="prev"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
     }
-    
+
+    public function testHttpGetListZeroResource()
+    {
+        $this->request('GET', '/resources', '/resources?range=0-0', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(1, count($this->response->getResourceData()));
+        $this->assertEquals(206, $this->response->getStatusCode());
+        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(['0-0/5'], $this->response->getHeader('Content-Range'));
+        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals([
+            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="prev"',
+            '&lt;http://api.taotest.example/v1/items?range=1-1&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
+    }
+
+    public function testHttpGetListNonZeroResource()
+    {
+        $this->request('GET', '/resources', '/resources?range=3-3', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(1, count($this->response->getResourceData()));
+        $this->assertEquals(206, $this->response->getStatusCode());
+        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(['3-3/5'], $this->response->getHeader('Content-Range'));
+        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals([
+            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
+            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="prev"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
+    }
+
+    public function testHttpGetListLastResource()
+    {
+        $this->request('GET', '/resources', '/resources?range=4-4', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(1, count($this->response->getResourceData()));
+        $this->assertEquals(206, $this->response->getStatusCode());
+        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(['4-4/5'], $this->response->getHeader('Content-Range'));
+        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals([
+            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
+            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
+            '&lt;http://api.taotest.example/v1/items?range=3-3&gt;; rel="prev"',
+            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
+    }
 }

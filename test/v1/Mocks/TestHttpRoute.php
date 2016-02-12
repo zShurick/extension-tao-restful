@@ -21,6 +21,9 @@ namespace oat\taoRestAPI\test\v1\Mocks;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
+use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\model\v1\http\AbstractFilter;
 use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
@@ -41,40 +44,6 @@ class TestHttpRoute extends Router
      * @var Response
      */
     protected $res;
-
-
-    /**
-     * Rest API auto runner
-     * 
-     * # Defines and runs the necessary methods for current Http header _method
-     * 
-     * ## for dev test with slim, can compile http responses with correct status codes
-     * 
-     * @param ServerRequestInterface $req
-     * @param Response $res
-     * @throws HttpRequestException
-     */
-    public function __invoke(ServerRequestInterface $req, Response &$res)
-    {
-        $this->req = $req;
-        $this->res = &$res;
-
-        try {
-            
-            $this->setResourceId($this->req->getAttribute('id'));
-            $method = strtolower($this->req->getMethod());
-            if (!method_exists($this, $method)) {
-                throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
-            }
-            
-            $this->$method();
-            
-        } catch(HttpRequestException $e) {
-            $res = $res->withJson(['errors' => [$e->getMessage()]]);
-            $res = $res->withStatus($e->getCode());
-        }
-    }
-    
     /**
      * Data for testing and example of workflow
      * @var array
@@ -118,6 +87,38 @@ class TestHttpRoute extends Router
     ];
 
     /**
+     * Rest API auto runner
+     *
+     * # Defines and runs the necessary methods for current Http header _method
+     *
+     * ## for dev test with slim, can compile http responses with correct status codes
+     *
+     * @param ServerRequestInterface $req
+     * @param Response $res
+     * @throws HttpRequestException
+     */
+    public function __invoke(ServerRequestInterface $req, Response &$res)
+    {
+        $this->req = $req;
+        $this->res = &$res;
+
+        try {
+
+            $this->setResourceId($this->req->getAttribute('id'));
+            $method = strtolower($this->req->getMethod());
+            if (!method_exists($this, $method)) {
+                throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
+            }
+
+            $this->$method();
+
+        } catch (RestApiException $e) {
+            $res = $res->withJson(['errors' => [$e->getMessage()]]);
+            $res = $res->withStatus($e->getCode());
+        }
+    }
+
+    /**
      * For phpunit testing data changing (put, post, delete, patch)
      * @return array
      */
@@ -151,7 +152,7 @@ class TestHttpRoute extends Router
 
         //creating
         $this->resourcesData[] = $resource;
-        
+
         $this->res = $this->res->withStatus(201);
         $this->res = $this->res->withHeader('Location', (string)$this->req->getUri() . '/' . $resource['id']);
     }
@@ -197,7 +198,7 @@ class TestHttpRoute extends Router
         if (isset($resource['id']) && $resource['id'] !== $this->getResourceId()) {
             throw new HttpRequestException('Invalid Id', 400);
         }
-        
+
         $ids = [];
         foreach ($this->resourcesData as $key => $row) {
             $ids[$key] = $row['id'];
@@ -224,40 +225,50 @@ class TestHttpRoute extends Router
         if (in_array($this->getResourceId(), $ids)) {
 
             unset($this->resourcesData[array_search($this->getResourceId(), $ids)]);
-            
+
         }
-        
+
     }
 
     public function options()
     {
         $this->res = $this->res->withJson(parent::options());
     }
-    
+
     protected function getList()
     {
         $queryParams = $this->req->getQueryParams();
-
-        $partial = new Partial($this->res, [
-            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
+        
+        $filter = new Filter([
+            'query' => $queryParams,
             'fields' => array_keys($this->resourcesData[0]),
         ]);
-
-        $paginate = new Paginate($this->res, [
+        
+        try {
+        $paginate = new Paginate([
             'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
             'total' => count($this->resourcesData),
             'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
         ]);
+        } catch (HttpRequestExceptionWithHeaders $e) {
+            // add failed headers if exists
+            $this->addFilterHeadersInResponse($e->getHeaders());
+            throw new HttpRequestException($e->getMessage(), $e->getCode());
+        }
 
-        $sort = new Sort($this->res, ['query' => $queryParams]);
-
-        $filter = new Filter($this->res, [
-            'query' => $queryParams,
+        $partial = new Partial([
+            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
             'fields' => array_keys($this->resourcesData[0]),
         ]);
+        
+        $sort = new Sort(['query' => $queryParams]);
 
         $data = $this->searchInstances([
 
+            // use filter by values
+            'filters' => $filter->getFilters(),
+            
+            // columns
             'fields' => $partial->getFields(),
 
             // sort
@@ -266,14 +277,29 @@ class TestHttpRoute extends Router
             // pagination
             'offset' => $paginate->offset(),
             'limit' => $paginate->length(),
-
-            // use filter
-            'filters' => $filter->getFilters(),
+            
         ]);
 
-        $paginate->correctPaginationHeader(count($data));
+        $beforePaginationCount = count($this->searchInstances(['filters' => $filter->getFilters()]));
+        
+        $paginate->correctPaginationHeader(count($data), $beforePaginationCount);
+
+        if ($this->res->getStatusCode() == 200 && $paginate->getStatusCode()) {
+            $this->res = $this->res->withStatus($paginate->getStatusCode());
+        }
+        // success headers
+        $this->addFilterHeadersInResponse($paginate->getHeaders());
 
         $this->res->setResourceData($data);
+    }
+
+    private function addFilterHeadersInResponse(array $addHeaders)
+    {
+        if (count($addHeaders)) {
+            foreach ($addHeaders as $name => $header) {
+                $this->res = $this->res->withHeader($name, $header);
+            }
+        }
     }
 
     private function searchInstances($params = [])
@@ -283,7 +309,7 @@ class TestHttpRoute extends Router
         // filters
         // fields with and, values with or
         $filteredData = [];
-        if (count($params['filters'])) {
+        if (isset($params['filters']) && count($params['filters'])) {
             foreach ($data as $key => $row) {
                 foreach ($params['filters'] as $field => $filters) {
                     if (in_array($row[$field], $filters)) {
@@ -300,7 +326,7 @@ class TestHttpRoute extends Router
         }
 
         // sort
-        if (count($params['sortBy'])) {
+        if (isset($params['sortBy']) && count($params['sortBy'])) {
             $sorting = [];
 
             if (!isset($params['sortBy']['desc'])) {
@@ -328,10 +354,12 @@ class TestHttpRoute extends Router
         }
 
         // pagination
-        $data = array_slice($data, $params['offset'], $params['limit']);
-
+        if (isset($params['offset']) && isset($params['limit'])) {
+            $data = array_slice($data, $params['offset'], $params['limit']);
+        }
+        
         // fields
-        if (count($params['fields'])) {
+        if (isset($params['fields']) && count($params['fields'])) {
 
             foreach ($data as $k => $row) {
                 foreach ($row as $key => $value) {
@@ -356,7 +384,7 @@ class TestHttpRoute extends Router
             }
         }
 
-        $partial = new Partial($this->res, [
+        $partial = new Partial([
             'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
             'fields' => array_keys($this->resourcesData[0]),
         ]);

@@ -24,5 +24,8 @@ namespace oat\taoRestAPI\model;
 
 interface AuthenticationInterface
 {
+    /**
+     * @return mixed
+     */
     public function authenticate();
 }

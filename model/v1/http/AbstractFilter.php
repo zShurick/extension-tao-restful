@@ -26,6 +26,21 @@ abstract class AbstractFilter
 {
 
     /**
+     * Http Response status code
+     * @var int
+     */
+    protected $statusCode = 0;
+
+    /**
+     * Headers for responses
+     * 
+     * # example ['Content-Range' => ['0-4/5']]
+     * 
+     * @var array
+     */
+    protected $headers = [];
+    
+    /**
      * Options for filters
      * @var array
      *  [
@@ -35,22 +50,43 @@ abstract class AbstractFilter
     protected $options = ['query' => ''];
 
     /**
-     * @var Response
-     */
-    protected $response;
-
-    /**
      * Filters constructor.
-     * @param Response $response - We can change headers for response in filter
      * @param array $options
      */
-    public function __construct(Response &$response, $options = [])
+    public function __construct($options = [])
     {
-        $this->response = &$response;
         $this->options = array_merge($this->options, $options);
         $this->prepare();
     }
 
+    /**
+     * Set Http status code
+     * @param int $code
+     */
+    protected function setStatusCode($code=200)
+    {
+        $this->statusCode = (int)$code;
+    }
+    
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
+    
+    protected function addHeader($name='', $values)
+    {
+        
+        if (!is_array($values)) {
+            $values = [$values];
+        }
+        $this->headers = array_merge($this->headers, [$name => $values]);
+    }
+    
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+    
     /**
      * Prepare data for filtering
      * @return mixed

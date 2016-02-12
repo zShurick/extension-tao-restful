@@ -38,8 +38,8 @@ class FilterTest extends TaoPhpUnitTestRunner
         });
         
         $this->assertEquals(3, count($this->response->getResourceData()));
-        $this->assertEquals(206, $this->response->getStatusCode());
-        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
 
         foreach ($this->response->getResourceData() as $item) {
             $this->assertEquals('citrus', $item['type']);
@@ -53,8 +53,8 @@ class FilterTest extends TaoPhpUnitTestRunner
         });
 
         $this->assertEquals(2, count($this->response->getResourceData()));
-        $this->assertEquals(206, $this->response->getStatusCode());
-        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
 
         foreach ($this->response->getResourceData() as $item) {
             $this->assertTrue(in_array($item['type'], ['citrus', 'vegetable']));

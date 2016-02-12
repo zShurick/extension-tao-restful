@@ -15,21 +15,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\dataEncoder;
+namespace oat\taoRestAPI\exception;
 
 
-use oat\taoRestAPI\model\DataEncoderInterface;
-
-class JsonEncoder implements DataEncoderInterface
+/**
+ * Class HttpRequestException
+ * @package oat\taoRestAPI\exception
+ */
+class HttpRequestExceptionWithHeaders extends HttpRequestException 
 {
-    public function encode( $data )
+    /**
+     * @var array
+     */
+    private $headers;
+    
+    public function __construct($message = null, $code = 0, array $headers)
     {
-        if (!is_array($data)) {
-            $data = [$data];
-        }
-        
-        return json_encode($data);
+        $this->headers = $headers;
+        parent::__construct($message, $code);
+    }
+    
+    public function getHeaders()
+    {
+        return $this->headers;
     }
 }

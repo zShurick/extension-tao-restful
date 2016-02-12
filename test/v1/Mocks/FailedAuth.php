@@ -15,21 +15,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\dataEncoder;
+namespace oat\taoRestAPI\test\v1\Mocks;
 
 
-use oat\taoRestAPI\model\DataEncoderInterface;
+use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\model\AuthenticationInterface;
 
-class JsonEncoder implements DataEncoderInterface
-{
-    public function encode( $data )
-    {
-        if (!is_array($data)) {
-            $data = [$data];
-        }
-        
-        return json_encode($data);
+class FailedAuth implements AuthenticationInterface {
+    
+    public function authenticate(){
+        throw new RestApiException('Testing for fail auth', 401);
     }
 }
+

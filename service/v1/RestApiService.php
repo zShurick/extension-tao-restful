@@ -27,6 +27,7 @@ use oat\taoRestAPI\model\AuthenticationInterface;
 use oat\taoRestAPI\model\DataEncoderInterface;
 use oat\taoRestAPI\model\HttpDataFormatInterface;
 use oat\taoRestAPI\model\HttpRouterInterface;
+use oat\taoRestAPI\model\v1\dataEncoder\JsonEncoder;
 use oat\taoRestAPI\service\RestApiInterface;
 
 /**
@@ -66,14 +67,11 @@ class RestApiService implements RestApiInterface
             throw new RestApiException('HttpRouter is not set', 500);
         }
         
-        try {
-            
-            $callable($this->router);
-            
-        } catch (RestApiException $e) {
-            
+        if (!isset($this->encoder)) {
+            $this->encoder = new JsonEncoder();
         }
-
+        
+        $callable($this->router, $this->encoder);
     }
     
     public function setAuth(AuthenticationInterface $auth)

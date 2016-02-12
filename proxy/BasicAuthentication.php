@@ -24,6 +24,8 @@ namespace oat\taoRestAPI\proxy;
 
 use common_http_Request;
 use common_session_RestSession;
+use oat\oatbox\user\LoginFailedException;
+use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\AuthenticationInterface;
 use tao_models_classes_HttpBasicAuthAdapter;
 
@@ -38,9 +40,13 @@ class BasicAuthentication implements AuthenticationInterface
     
     public function authenticate()
     {
-        $user = $this->adapter->authenticate();
-        // login
-        $session = new common_session_RestSession($user);
-        \common_session_SessionManager::startSession($session);
+        try {
+            $user = $this->adapter->authenticate();
+            // login
+            $session = new common_session_RestSession($user);
+            \common_session_SessionManager::startSession($session);
+        } catch(LoginFailedException $e) {
+            throw new RestApiException($e->getUserMessage(), 401);
+        }
     }
 }

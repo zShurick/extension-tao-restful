@@ -68,11 +68,11 @@ class GetListTest extends TaoPhpUnitTestRunner
 
         $this->assertEquals(3, count($this->response->getResourceData()));
         $this->assertEquals(2, count($this->response->getResourceData()[0]));
-        $this->assertEquals(206, $this->response->getStatusCode());
-        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
-        $this->assertEquals(['0-2/5'], $this->response->getHeader('Content-Range'));
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals(['0-2/3'], $this->response->getHeader('Content-Range'));
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
-        $this->assertEquals(4, count($this->response->getHeader('Link')));
+        $this->assertEquals(0, count($this->response->getHeader('Link')));
 
         $titles = [];
         foreach ($this->response->getResourceData() as $item) {
@@ -80,5 +80,27 @@ class GetListTest extends TaoPhpUnitTestRunner
         }
 
         $this->assertEquals(['Lemon', 'Lime', 'Orange'], $titles);
+    }
+
+    public function testFilterWithRange()
+    {
+        $this->request('GET', '/resources', '/resources?type=citrus&range=0-0', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(1, count($this->response->getResourceData()));
+        $this->assertEquals(206, $this->response->getStatusCode());
+        $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
+
+        $this->assertEquals([
+            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
+            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="last"',
+            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="prev"',
+            '&lt;http://api.taotest.example/v1/items?range=1-1&gt;; rel="next"',
+        ], $this->response->getHeader('Link'));
+
+        foreach ($this->response->getResourceData() as $item) {
+            $this->assertEquals('citrus', $item['type']);
+        }
     }
 }
