@@ -14,28 +14,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
- *
- * @author Alexander Zagovorichev <zagovorichev@gmail.com>
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\model\v1\http;
 
 
-use oat\taoRestAPI\model\v1\http\Response;
-use Psr\Http\Message\ServerRequestInterface;
+use Slim\Http\Response as HttpResponse;
 
-interface RestApiInterface 
+class Response extends HttpResponse
 {
-    
-    const SERVICE_ID = 'taoRestAPI/restApi';
-
     /**
-     * Current RestApi version
-     *
-     * @var string
+     * Source data for response, if needed for data handling
+     * @var mixed
      */
-    const VERSION = '1.0.0';
+    private $resourceData;
     
-    public function execute(ServerRequestInterface $req, Response $res);
+    public function setResourceData( $data )
+    {
+        $this->resourceData = $data;
+    }
+    
+    public function getResourceData()
+    {
+        return $this->resourceData;
+    }
 }

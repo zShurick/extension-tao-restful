@@ -14,28 +14,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
- *
- * @author Alexander Zagovorichev <zagovorichev@gmail.com>
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\test\v1\Mocks;
 
 
-use oat\taoRestAPI\model\v1\http\Response;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\MiddlewareAwareTrait;
 
-interface RestApiInterface 
+
+class KernelStack
 {
-    
-    const SERVICE_ID = 'taoRestAPI/restApi';
+    use MiddlewareAwareTrait;
 
-    /**
-     * Current RestApi version
-     *
-     * @var string
-     */
-    const VERSION = '1.0.0';
+    public function __invoke(ServerRequestInterface $req, ResponseInterface $res)
+    {
+        return $res->write('Center');
+    }
     
-    public function execute(ServerRequestInterface $req, Response $res);
+    public function add($callable)
+    {
+        $this->addMiddleware($callable);
+        return $this;
+    }
 }

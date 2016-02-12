@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
+ *
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
@@ -23,53 +23,40 @@ namespace oat\taoRestAPI\model\restApi;
 
 
 use oat\taoRestAPI\exception\RestApiException;
-use oat\taoRestAPI\model\httpRequest\HttpDataFormat;
 use oat\taoRestAPI\model\RestApiInterface;
-use oat\taoRestAPI\model\stack\RestApiStack;
-use oat\taoRestAPI\test\Mocks\TestRoute;
-use Psr\Http\Message\ResponseInterface;
+use oat\taoRestAPI\model\v1\http\Request\DataFormat;
+use oat\taoRestAPI\model\v1\http\Response;
+use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Bring together all middlewares and modules for getting restApi service
- *
  * Class RestApiServiceV1
  * @package oat\taoRestAPI\model\restApi
  */
-class RestApiServiceV1 implements RestApiInterface
+class RestApiService implements RestApiInterface
 {
 
-    /**
-     * @var RestApiStack
-     */
-    private $stack;
-
-    public function __construct()
-    {
-        $this->stack = new RestApiStack();
-    }
-
-    public function resources(ServerRequestInterface $req, ResponseInterface $res)
+    public function execute(ServerRequestInterface $req, Response $res)
     {
         try {
-            $this->stack
-                ->add(function ($req, $res, $next) {
-                    $route = new TestRoute($req, $res);
-                    // set response answer status and set resourceData
-                    $route->router();
-                    return $res;
-                })
-                ->add(function ($req, $res, $next) {
-                    $res = $next($req, $res);
-                    $format = new HttpDataFormat();
-                    $res->write( $format->encoder($res->getResourceData()) );
-                    return $res;
-                })
-                ->callMiddlewareStack($req, $res);
+
+            // auth
+            $encoder = DataFormat::encoder();
+
+            (new TestHttpRoute($req, $res))->router();
+
+            if (count($res->getResourceData())) {
+                $encodedData = $encoder->encode($res->getResourceData());
+                $res = $res->withBody($encodedData);
+            }
+            
         } catch (RestApiException $e) {
             // answer with error
-            var_dump($e);
+            $res = $res
+                ->withJson(['errors' => [$e->getMessage()]])
+                ->withStatus($e->getCode());
         }
-    }
 
+        return $res;
+    }
 }

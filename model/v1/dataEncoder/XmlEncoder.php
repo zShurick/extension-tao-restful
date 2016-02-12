@@ -14,28 +14,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Copyright (c) 2016 (original work) Open Assessment Technologies SA;
- *
- * @author Alexander Zagovorichev <zagovorichev@gmail.com>
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\model\v1\dataEncoder;
 
 
-use oat\taoRestAPI\model\v1\http\Response;
-use Psr\Http\Message\ServerRequestInterface;
+use oat\taoRestAPI\model\DataEncoderInterface;
+use tao_helpers_Xml;
 
-interface RestApiInterface 
+class XmlEncoder implements DataEncoderInterface
 {
-    
-    const SERVICE_ID = 'taoRestAPI/restApi';
-
-    /**
-     * Current RestApi version
-     *
-     * @var string
-     */
-    const VERSION = '1.0.0';
-    
-    public function execute(ServerRequestInterface $req, Response $res);
+    public function encode($data)
+    {
+        return tao_helpers_Xml::from_array($data);
+    }
 }
