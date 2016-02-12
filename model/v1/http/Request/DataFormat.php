@@ -31,21 +31,21 @@ use tao_helpers_Http;
 class DataFormat implements HttpDataFormatInterface
 {
 
-    private static $acceptedMimeTypes = [
+    private $acceptedMimeTypes = [
         'application/json' => 'JsonEncoder',
         'text/xml' => 'XmlEncoder', 
         'application/xml' => 'XmlEncoder', 
         //'application/rdf+xml' => 'RdfEncoder', todo
     ];
     
-    public static function encoder()
+    public function encoder()
     {
         // default
         $format = 'JsonEncoder';
         if(!empty($_SERVER['HTTP_ACCEPT'])){
             try {
-                $accept = tao_helpers_Http::acceptHeader(array_keys(static::$acceptedMimeTypes), $_SERVER['HTTP_ACCEPT']);
-                $format = static::$acceptedMimeTypes[$accept];
+                $accept = tao_helpers_Http::acceptHeader(array_keys($this->acceptedMimeTypes), $_SERVER['HTTP_ACCEPT']);
+                $format = $this->acceptedMimeTypes[$accept];
             }
             catch (common_exception_ClientException $e) {
                 throw new HttpRequestException(__('Not acceptable encoding format'), 406);

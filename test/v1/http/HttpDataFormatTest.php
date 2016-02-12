@@ -33,19 +33,19 @@ class HttpDataFormatTest extends TaoPhpUnitTestRunner
     public function testIncorrectMimeType()
     {
         $_SERVER['HTTP_ACCEPT'] = 'application/xls';
-        DataFormat::encoder();
+        (new DataFormat)->encoder();
     }
 
     public function testDefaultEncoder()
     {
-        $encoder = DataFormat::encoder();
+        $encoder = (new DataFormat)->encoder();
         $this->assertInstanceOf('oat\taoRestAPI\model\v1\dataEncoder\JsonEncoder', $encoder);
     }
     
     public function testJsonEncoder()
     {
         $_SERVER['HTTP_ACCEPT'] = 'application/json';
-        $encoder = DataFormat::encoder();
+        $encoder = (new DataFormat)->encoder();
         $this->assertInstanceOf('oat\taoRestAPI\model\v1\dataEncoder\JsonEncoder', $encoder);
         $this->assertEquals('[]', $encoder->encode([]));
         $this->assertEquals('{"key":"val"}', $encoder->encode(['key' => 'val']));
@@ -55,7 +55,7 @@ class HttpDataFormatTest extends TaoPhpUnitTestRunner
     public function testXmlEncoder()
     {
         $_SERVER['HTTP_ACCEPT'] = 'application/xml';
-        $encoder = DataFormat::encoder();
+        $encoder = (new DataFormat)->encoder();
         $this->assertInstanceOf('oat\taoRestAPI\model\v1\dataEncoder\XmlEncoder', $encoder);
         $this->assertEquals("<?xml version=\"1.0\"?>\n<root/>\n", $encoder->encode([]));
         $this->assertEquals("<?xml version=\"1.0\"?>\n<root>\n  <key>val</key>\n</root>\n", $encoder->encode(['key' => 'val']));

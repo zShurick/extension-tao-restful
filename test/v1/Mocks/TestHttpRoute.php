@@ -26,10 +26,59 @@ use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\Router;
+use oat\taoRestAPI\model\v1\http\Response;
+use Psr\Http\Message\ServerRequestInterface;
 
 class TestHttpRoute extends Router
 {
 
+    /**
+     * @var ServerRequestInterface
+     */
+    protected $req;
+
+    /**
+     * @var Response
+     */
+    protected $res;
+
+
+    /**
+     * Rest API auto runner
+     * 
+     * # Defines and runs the necessary methods for current Http header _method
+     * 
+     * ## for dev test with slim, can compile http responses with correct status codes
+     * 
+     * @param ServerRequestInterface $req
+     * @param Response $res
+     * @throws HttpRequestException
+     */
+    public function __invoke(ServerRequestInterface $req, Response &$res)
+    {
+        $this->req = $req;
+        $this->res = &$res;
+
+        try {
+            
+            $this->setResourceId($this->req->getAttribute('id'));
+            $method = strtolower($this->req->getMethod());
+            if (!method_exists($this, $method)) {
+                throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
+            }
+            
+            $this->$method();
+            
+        } catch(HttpRequestException $e) {
+            $res = $res->withJson(['errors' => [$e->getMessage()]]);
+            $res = $res->withStatus($e->getCode());
+        }
+    }
+    
+    /**
+     * Data for testing and example of workflow
+     * @var array
+     */
     private $resourcesData = [
         [
             'id' => 1,
@@ -102,6 +151,8 @@ class TestHttpRoute extends Router
 
         //creating
         $this->resourcesData[] = $resource;
+        
+        $this->res = $this->res->withStatus(201);
         $this->res = $this->res->withHeader('Location', (string)$this->req->getUri() . '/' . $resource['id']);
     }
 
@@ -178,6 +229,11 @@ class TestHttpRoute extends Router
         
     }
 
+    public function options()
+    {
+        $this->res = $this->res->withJson(parent::options());
+    }
+    
     protected function getList()
     {
         $queryParams = $this->req->getQueryParams();

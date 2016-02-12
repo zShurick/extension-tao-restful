@@ -10,13 +10,6 @@ namespace oat\taoRestAPI\model;
 
 interface HttpRouterInterface
 {
-    
-    /**
-     * Starts the method defined in the Http request
-     * 
-     * @return mixed method result
-     */
-    public function router();
 
     /**
      * Get data

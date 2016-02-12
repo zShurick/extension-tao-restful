@@ -14,5 +14,5 @@ interface HttpDataFormatInterface
     /**
      * @return DataEncoderInterface
      */
-    public static function encoder();
+    public function encoder();
 }

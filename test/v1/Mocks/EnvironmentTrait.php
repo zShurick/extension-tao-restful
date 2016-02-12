@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
+ *
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
@@ -23,12 +23,12 @@ namespace oat\taoRestAPI\test\v1\Mocks;
 
 
 use InvalidArgumentException;
+use oat\taoRestAPI\model\v1\http\Response;
 use Slim\App;
 use Slim\Http\Environment;
 use Slim\Http\Headers;
 use Slim\Http\Request;
 use Slim\Http\RequestBody;
-use oat\taoRestAPI\model\v1\http\Response;
 use Slim\Http\Uri;
 
 /**
@@ -48,10 +48,16 @@ trait EnvironmentTrait
      * @var Request
      */
     private $request;
+
     /**
      * @var Response
      */
     private $response;
+
+    /**
+     * @var TestHttpRoute
+     */
+    private $route;
 
     /**
      * Http request
@@ -92,7 +98,7 @@ trait EnvironmentTrait
         if (strpos($requestUri, '?')) {
             list($requestUri, $queryString) = explode('?', $requestUri);
         }
-        
+
         // Prepare request and response objects
         $env = Environment::mock([
             'SCRIPT_NAME' => '/index.php',
@@ -100,7 +106,7 @@ trait EnvironmentTrait
             'QUERY_STRING' => $queryString,
             'REQUEST_METHOD' => $requestMethod,
         ]);
-        
+
         $uri = Uri::createFromEnvironment($env);
         $headers = Headers::createFromEnvironment($env);
         $cookies = [];
@@ -111,5 +117,15 @@ trait EnvironmentTrait
 
         // Invoke app
         return $app($this->request, $this->response);
+    }
+
+    public function routerRunner($req, &$res, array $args = [])
+    {
+
+        $this->route = $route = new TestHttpRoute();
+        // __invoke
+        $route($req, $res);
+
+        return $this->response = $res;
     }
 }

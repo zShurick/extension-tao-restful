@@ -19,29 +19,40 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\test\v1\http\Response;
+namespace oat\taoRestAPI\test\v1\http\methods;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
+use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\model\v1\http\Response;
 use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
+use Slim\Http\Environment;
+use Slim\Http\Request;
 
-class FieldsTest extends TaoPhpUnitTestRunner
+class OptionsTest extends TaoPhpUnitTestRunner
 {
-
     use EnvironmentTrait;
-
-    public function testFields()
+   
+    public function testHttpListResourcesOptions()
     {
-        $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
+        $this->request('OPTIONS', '/resources/', function ($req, $res, $args) {
             return $this->routerRunner($req, $res, $args);
         });
-        
-        $this->assertEquals(['title', 'type'], array_keys($this->response->getResourceData()[0]));
-        $this->assertEquals(2, count($this->response->getResourceData()[0]));
+
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(['0-4/5'], $this->response->getHeader('Content-Range'));
-        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        $this->assertEquals('["POST","GET","OPTIONS"]', (string)$this->response->getBody());
+    }
+    
+    public function testHttpResourceOptions()
+    {
+        $this->request('OPTIONS', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(200, $this->response->getStatusCode());
+        $this->assertEquals('OK', $this->response->getReasonPhrase());
+        $this->assertEquals('["GET","PUT","PATCH","DELETE","OPTIONS"]', (string)$this->response->getBody());
     }
 }

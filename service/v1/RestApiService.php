@@ -19,15 +19,15 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\restApi;
+namespace oat\taoRestAPI\service\v1;
 
 
 use oat\taoRestAPI\exception\RestApiException;
-use oat\taoRestAPI\model\RestApiInterface;
-use oat\taoRestAPI\model\v1\http\Request\DataFormat;
-use oat\taoRestAPI\model\v1\http\Response;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
-use Psr\Http\Message\ServerRequestInterface;
+use oat\taoRestAPI\model\AuthenticationInterface;
+use oat\taoRestAPI\model\DataEncoderInterface;
+use oat\taoRestAPI\model\HttpDataFormatInterface;
+use oat\taoRestAPI\model\HttpRouterInterface;
+use oat\taoRestAPI\service\RestApiInterface;
 
 /**
  * Class RestApiServiceV1
@@ -36,27 +36,61 @@ use Psr\Http\Message\ServerRequestInterface;
 class RestApiService implements RestApiInterface
 {
 
-    public function execute(ServerRequestInterface $req, Response $res)
+    /**
+     * @var AuthenticationInterface
+     */
+    private $authenticator;
+
+    /**
+     * @var HttpRouterInterface
+     */
+    private $router;
+
+    /**
+     * @var DataEncoderInterface
+     */
+    private $encoder;
+    
+    public function execute($callable)
     {
+
+        if (isset($this->authenticator)) {
+            $this->authenticator->authenticate();
+        }
+        
+        if (!is_callable($callable)) {
+            throw new RestApiException('$callable must be a closure function', 500);
+        }
+        
+        if (!isset($this->router)) {
+            throw new RestApiException('HttpRouter is not set', 500);
+        }
+        
         try {
-
-            // auth
-            $encoder = DataFormat::encoder();
-
-            (new TestHttpRoute($req, $res))->router();
-
-            if (count($res->getResourceData())) {
-                $encodedData = $encoder->encode($res->getResourceData());
-                $res = $res->withBody($encodedData);
-            }
+            
+            $callable($this->router);
             
         } catch (RestApiException $e) {
-            // answer with error
-            $res = $res
-                ->withJson(['errors' => [$e->getMessage()]])
-                ->withStatus($e->getCode());
+            
         }
 
-        return $res;
+    }
+    
+    public function setAuth(AuthenticationInterface $auth)
+    {
+        $this->authenticator = $auth;
+        return $this;
+    }
+    
+    public function setRouter(HttpRouterInterface $router)
+    {
+        $this->router = $router;
+        return $this;
+    }
+    
+    public function setEncoder(HttpDataFormatInterface $dataFormat) 
+    {
+        $this->encoder = $dataFormat->encoder();
+        return $this;
     }
 }

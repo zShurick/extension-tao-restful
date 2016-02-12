@@ -34,8 +34,7 @@ class FilterTest extends TaoPhpUnitTestRunner
     public function testFilter()
     {
         $this->request('GET', '/resources', '/resources?type=citrus', function ($req, $res, $args) {
-            (new TestHttpRoute($req, $res))->router();
-            return $this->response = $res;
+            return $this->routerRunner($req, $res, $args);
         });
         
         $this->assertEquals(3, count($this->response->getResourceData()));
@@ -50,8 +49,7 @@ class FilterTest extends TaoPhpUnitTestRunner
     public function testMultipleFilter()
     {
         $this->request('GET', '/resources', '/resources?type=citrus,vegetable&form=circle', function ($req, $res, $args) {
-            (new TestHttpRoute($req, $res))->router();
-            return $this->response = $res;
+            return $this->routerRunner($req, $res, $args);
         });
 
         $this->assertEquals(2, count($this->response->getResourceData()));
@@ -62,6 +60,5 @@ class FilterTest extends TaoPhpUnitTestRunner
             $this->assertTrue(in_array($item['type'], ['citrus', 'vegetable']));
             $this->assertTrue(in_array($item['form'], ['circle']));
         }
-
     }
 }

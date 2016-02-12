@@ -19,11 +19,8 @@
  * @author Alexander Zagovorichev <zagovorichev@gmail.com>
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\service;
 
-
-use oat\taoRestAPI\model\v1\http\Response;
-use Psr\Http\Message\ServerRequestInterface;
 
 interface RestApiInterface 
 {
@@ -36,6 +33,10 @@ interface RestApiInterface
      * @var string
      */
     const VERSION = '1.0.0';
-    
-    public function execute(ServerRequestInterface $req, Response $res);
+
+    /**
+     * @param $callable
+     * @return mixed
+     */
+    public function execute($callable);
 }

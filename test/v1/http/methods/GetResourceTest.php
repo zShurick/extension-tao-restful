@@ -19,29 +19,41 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\test\v1\http\Response;
+namespace oat\taoRestAPI\test\v1\http\methods;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
 use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 
-class FieldsTest extends TaoPhpUnitTestRunner
+class GetResourceTest extends TaoPhpUnitTestRunner
 {
-
     use EnvironmentTrait;
-
-    public function testFields()
+    
+    public function testHttpGetResource()
     {
-        $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
+        $this->request('GET', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
             return $this->routerRunner($req, $res, $args);
         });
-        
-        $this->assertEquals(['title', 'type'], array_keys($this->response->getResourceData()[0]));
-        $this->assertEquals(2, count($this->response->getResourceData()[0]));
+
+        $this->assertEquals(5, count($this->response->getResourceData()));
+        $this->assertEquals(1, $this->response->getResourceData()['id']);
         $this->assertEquals(200, $this->response->getStatusCode());
-        $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(['0-4/5'], $this->response->getHeader('Content-Range'));
-        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
     }
+
+    /**
+     * Get one resource partial
+     */
+    public function testHttpGetWithResourceWithParams()
+    {
+        $this->request('GET', '/resources/{id}', '/resources/5?fields=id,title,form', function ($req, $res, $args) {
+            return $this->routerRunner($req, $res, $args);
+        });
+
+        $this->assertEquals(3, count($this->response->getResourceData()));
+        $this->assertEquals(5, $this->response->getResourceData()['id']);
+        $this->assertEquals('Orange', $this->response->getResourceData()['title']);
+        $this->assertEquals('circle', $this->response->getResourceData()['form']);
+        $this->assertEquals(200, $this->response->getStatusCode());
+    }
+    
 }
