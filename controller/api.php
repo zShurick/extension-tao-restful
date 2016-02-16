@@ -22,40 +22,59 @@
 namespace oat\taoRestAPI\controller;
 
 
+use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\model\example\v1\HttpRoute;
+use oat\taoRestAPI\model\v1\http\Request\DataFormat;
+use oat\taoRestAPI\service\v1\RestApiService;
 use tao_actions_CommonModule;
-use oat\taoRestAPI\model\RestApi\v1\RestApiService;
 
 /**
  * @author Open Assessment Technologies SA
- * @package taoRestAPI
+ * @package taoRestAPI v1
  * @license GPL-2.0
  *
  */
-class TaoRestAPI extends tao_actions_CommonModule {
+class api extends tao_actions_CommonModule {
 
     /**
      * @var RestApiService
      */
-    private $restApiService;
+    protected $service;
     
     /**
      * initialize the services
      */
     public function __construct(){
         parent::__construct();
-        
-        $this->restApiService = new RestApiService();
+        $this->service = new RestApiService();
     }
 
+    public function documentation()
+    {
+        echo "doc";
+    }
+    
     /**
      * A possible entry point to tao
      */
-    public function index() {
-        echo __("Hello World");
-    }
-
-    public function templateExample() {
-        $this->setData('author', 'Open Assessment Technologies SA');
-        $this->setView('TaoRestAPI/templateExample.tpl');
+    public function v1() {
+        try {
+            $this->service
+                ->setEncoder(new DataFormat())
+                ->setRouter(new HttpRoute())
+                //->setAuth(new FailedAuth())
+                ->execute(function ($router, $encoder) {
+                    
+                    $router($this->getRequest(), $this->getResponse());
+                    
+                    //$router($req, $res);
+                    // $this->returnJson([]);
+                    /*$res->write($encoder->encode($res->getResourceData()));*/
+                });
+        } catch (RestApiException $e) {
+            /*$res = $res->withStatus($e->getCode());
+            $res = $res->withJson(['errors' => [$e->getMessage()]]);*/
+            var_dump('error: ' . $e->getMessage());
+        }
     }
 }

@@ -29,9 +29,8 @@ return array(
 	'requires' => array(
 		'tao'           => '>=2.17.0',
     ),
-	'managementRole' => 'http://www.tao.lu/Ontologies/generis.rdf#taoRestAPIManager',
     'acl' => array(
-        array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#taoRestAPIManager', array('ext'=>'taoRestAPI')),
+        array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#AnonymousRole', array('ext'=>'taoRestAPI')),
     ),
     'install' => array(
     ),

@@ -23,7 +23,6 @@ namespace oat\taoRestAPI\test\v1\Mocks;
 
 
 use InvalidArgumentException;
-use oat\taoRestAPI\model\v1\http\Response;
 use Slim\App;
 use Slim\Http\Environment;
 use Slim\Http\Headers;

@@ -23,13 +23,11 @@ namespace oat\taoRestAPI\test\v1\Mocks;
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
 use oat\taoRestAPI\exception\RestApiException;
-use oat\taoRestAPI\model\v1\http\AbstractFilter;
 use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\Router;
-use oat\taoRestAPI\model\v1\http\Response;
 use Psr\Http\Message\ServerRequestInterface;
 
 class TestHttpRoute extends Router
@@ -44,48 +42,17 @@ class TestHttpRoute extends Router
      * @var Response
      */
     protected $res;
-    /**
-     * Data for testing and example of workflow
-     * @var array
-     */
-    private $resourcesData = [
-        [
-            'id' => 1,
-            'title' => 'Potato',
-            'type' => 'vegetable',
-            'form' => 'circle',
-            'color' => 'brown',
-        ],
-        [
-            'id' => 2,
-            'title' => 'Lemon',
-            'type' => 'citrus',
-            'form' => 'ellipse',
-            'color' => 'yellow',
-        ],
-        [
-            'id' => 3,
-            'title' => 'Lime',
-            'type' => 'citrus',
-            'form' => 'ellipse',
-            'color' => 'green',
-        ],
-        [
-            'id' => 4,
-            'title' => 'Carrot',
-            'type' => 'vegetable',
-            'form' => 'conical',
-            'color' => 'orange',
-        ],
-        [
-            'id' => 5,
-            'title' => 'Orange',
-            'type' => 'citrus',
-            'form' => 'circle',
-            'color' => 'orange',
-        ],
-    ];
 
+    /**
+     * @var DB
+     */
+    private $db;
+    
+    public function __construct()
+    {
+        $this->db = new DB();
+    }
+    
     /**
      * Rest API auto runner
      *
@@ -97,21 +64,15 @@ class TestHttpRoute extends Router
      * @param Response $res
      * @throws HttpRequestException
      */
-    public function __invoke(ServerRequestInterface $req, Response &$res)
+    public function __invoke(ServerRequestInterface $req = null, Response &$res = null)
     {
         $this->req = $req;
         $this->res = &$res;
-
+        
         try {
 
-            $this->setResourceId($this->req->getAttribute('id'));
-            $method = strtolower($this->req->getMethod());
-            if (!method_exists($this, $method)) {
-                throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
-            }
-
-            $this->$method();
-
+            $this->runApiCommand($this->req->getMethod(), $this->req->getAttribute('id'));
+                
         } catch (RestApiException $e) {
             $res = $res->withJson(['errors' => [$e->getMessage()]]);
             $res = $res->withStatus($e->getCode());
@@ -124,7 +85,7 @@ class TestHttpRoute extends Router
      */
     public function getResources()
     {
-        return $this->resourcesData;
+        return $this->db->getResources();
     }
 
     /**
@@ -143,7 +104,7 @@ class TestHttpRoute extends Router
         }
         // data validation
         $ids = [];
-        foreach ($this->resourcesData as $row) {
+        foreach ($this->getResources() as $row) {
             $ids[] = $row['id'];
         }
         if (in_array($resource['id'], $ids)) {
@@ -151,7 +112,7 @@ class TestHttpRoute extends Router
         }
 
         //creating
-        $this->resourcesData[] = $resource;
+        $this->getResources()[] = $resource;
 
         $this->res = $this->res->withStatus(201);
         $this->res = $this->res->withHeader('Location', (string)$this->req->getUri() . '/' . $resource['id']);
@@ -173,7 +134,7 @@ class TestHttpRoute extends Router
 
         // data validation
         $ids = [];
-        foreach ($this->resourcesData as $key => $row) {
+        foreach ($this->getResources() as $key => $row) {
             $ids[$key] = $row['id'];
         }
         if (!in_array($this->getResourceId(), $ids)) {
@@ -181,7 +142,7 @@ class TestHttpRoute extends Router
         }
 
         //replace
-        $this->resourcesData[array_search($this->getResourceId(), $ids)] = $resource;
+        $this->db->saveResource(array_search($this->getResourceId(), $ids), $resource);
     }
 
     public function patch()
@@ -200,18 +161,20 @@ class TestHttpRoute extends Router
         }
 
         $ids = [];
-        foreach ($this->resourcesData as $key => $row) {
+        foreach ($this->getResources() as $key => $row) {
             $ids[$key] = $row['id'];
         }
         if (!in_array($this->getResourceId(), $ids)) {
             throw new HttpRequestException('Resource with id=' . $this->getResourceId() . ' not exists.', 400);
         }
 
-        //update
-        $updResource = &$this->resourcesData[array_search($this->getResourceId(), $ids)];
+        $resourceKey = array_search($this->getResourceId(), $ids);
+        $updResource = $this->getResources()[$resourceKey];
         foreach ($resource as $key => $value) {
             $updResource[$key] = $value;
         }
+        
+        $this->db->saveResource($resourceKey, $updResource);
     }
 
     public function delete()
@@ -219,13 +182,11 @@ class TestHttpRoute extends Router
         parent::delete();
 
         $ids = [];
-        foreach ($this->resourcesData as $key => $row) {
+        foreach ($this->getResources() as $key => $row) {
             $ids[$key] = $row['id'];
         }
         if (in_array($this->getResourceId(), $ids)) {
-
-            unset($this->resourcesData[array_search($this->getResourceId(), $ids)]);
-
+            $this->db->deleteResource(array_search($this->getResourceId(), $ids));
         }
 
     }
@@ -241,13 +202,13 @@ class TestHttpRoute extends Router
         
         $filter = new Filter([
             'query' => $queryParams,
-            'fields' => array_keys($this->resourcesData[0]),
+            'fields' => array_keys($this->getResources()[0]),
         ]);
         
         try {
         $paginate = new Paginate([
             'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
-            'total' => count($this->resourcesData),
+            'total' => count($this->getResources()),
             'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
         ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
@@ -258,12 +219,12 @@ class TestHttpRoute extends Router
 
         $partial = new Partial([
             'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->resourcesData[0]),
+            'fields' => array_keys($this->getResources()[0]),
         ]);
         
         $sort = new Sort(['query' => $queryParams]);
 
-        $data = $this->searchInstances([
+        $data = $this->db->searchInstances([
 
             // use filter by values
             'filters' => $filter->getFilters(),
@@ -277,10 +238,9 @@ class TestHttpRoute extends Router
             // pagination
             'offset' => $paginate->offset(),
             'limit' => $paginate->length(),
-            
         ]);
 
-        $beforePaginationCount = count($this->searchInstances(['filters' => $filter->getFilters()]));
+        $beforePaginationCount = count($this->db->searchInstances(['filters' => $filter->getFilters()]));
         
         $paginate->correctPaginationHeader(count($data), $beforePaginationCount);
 
@@ -302,83 +262,12 @@ class TestHttpRoute extends Router
         }
     }
 
-    private function searchInstances($params = [])
-    {
-        $data = $this->resourcesData;
-
-        // filters
-        // fields with and, values with or
-        $filteredData = [];
-        if (isset($params['filters']) && count($params['filters'])) {
-            foreach ($data as $key => $row) {
-                foreach ($params['filters'] as $field => $filters) {
-                    if (in_array($row[$field], $filters)) {
-                        $filteredData[$key] = $row;
-                    } else {
-                        if (isset($filteredData[$key])) {
-                            unset($filteredData[$key]);
-                        }
-                        continue;
-                    }
-                }
-            }
-            $data = $filteredData;
-        }
-
-        // sort
-        if (isset($params['sortBy']) && count($params['sortBy'])) {
-            $sorting = [];
-
-            if (!isset($params['sortBy']['desc'])) {
-                $params['sortBy']['desc'] = [];
-            }
-
-            foreach ($params['sortBy']['sort'] as $field) {
-                $column = [];
-                foreach ($data as $key => $row) {
-                    $column[$key] = $row[$field];
-                }
-
-                $sorting[] = $column;
-
-                if (in_array($field, $params['sortBy']['desc'])) {
-                    $sorting[] = SORT_DESC;
-                } else {
-                    $sorting[] = SORT_ASC;
-                }
-            }
-
-            $sorting[] = &$data;
-            call_user_func_array('array_multisort', $sorting);
-            $data = array_pop($sorting);
-        }
-
-        // pagination
-        if (isset($params['offset']) && isset($params['limit'])) {
-            $data = array_slice($data, $params['offset'], $params['limit']);
-        }
-        
-        // fields
-        if (isset($params['fields']) && count($params['fields'])) {
-
-            foreach ($data as $k => $row) {
-                foreach ($row as $key => $value) {
-                    if (!in_array($key, $params['fields'])) {
-                        unset($data[$k][$key]);
-                    }
-                }
-            }
-        }
-
-        return $data;
-    }
-
     protected function getOne()
     {
         $queryParams = $this->req->getQueryParams();
 
         $resource = [];
-        foreach ($this->resourcesData as $resource) {
+        foreach ($this->getResources() as $resource) {
             if ($resource['id'] == $this->req->getAttribute('id')) {
                 break;
             }
@@ -386,7 +275,7 @@ class TestHttpRoute extends Router
 
         $partial = new Partial([
             'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->resourcesData[0]),
+            'fields' => array_keys($this->getResources()[0]),
         ]);
 
         foreach ($resource as $key => $value) {

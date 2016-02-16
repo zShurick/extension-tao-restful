@@ -89,4 +89,16 @@ abstract class Router implements HttpRouterInterface
     {
         $this->resourceId = $id;
     }
+
+    protected function runApiCommand($method = '', $id = '')
+    {
+        $this->setResourceId($id);
+        $method = strtolower($method);
+
+        if (!method_exists($this, $method)) {
+            throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
+        }
+
+        $this->$method();
+    }
 }
