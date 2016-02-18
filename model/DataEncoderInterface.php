@@ -22,5 +22,17 @@ namespace oat\taoRestAPI\model;
 
 interface DataEncoderInterface
 {
+    /**
+     * Make data encode
+     * 
+     * @param $data
+     * @return mixed
+     */
     public function encode( $data );
+    
+    /**
+     * Get content type
+     * @return mixed
+     */
+    public function getContentType();
 }

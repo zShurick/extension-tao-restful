@@ -29,4 +29,9 @@ class XmlEncoder implements DataEncoderInterface
     {
         return tao_helpers_Xml::from_array($data);
     }
+
+    public function getContentType()
+    {
+        return 'application/xml';
+    }
 }

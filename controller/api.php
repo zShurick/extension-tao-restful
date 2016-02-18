@@ -25,6 +25,7 @@ namespace oat\taoRestAPI\controller;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\example\v1\HttpRoute;
 use oat\taoRestAPI\model\v1\http\Request\DataFormat;
+use oat\taoRestAPI\proxy\BasicAuthentication;
 use oat\taoRestAPI\service\v1\RestApiService;
 use tao_actions_CommonModule;
 
@@ -58,23 +59,25 @@ class api extends tao_actions_CommonModule {
      * A possible entry point to tao
      */
     public function v1() {
+        
         try {
             $this->service
                 ->setEncoder(new DataFormat())
                 ->setRouter(new HttpRoute())
-                //->setAuth(new FailedAuth())
+                ->setAuth(new BasicAuthentication())
                 ->execute(function ($router, $encoder) {
                     
                     $router($this->getRequest(), $this->getResponse());
                     
-                    //$router($req, $res);
-                    // $this->returnJson([]);
-                    /*$res->write($encoder->encode($res->getResourceData()));*/
+                    $this->service->writeResponse(
+                        $router->getStatusCode(), 
+                        $encoder->getContentType(), 
+                        $router->getHeaders(), 
+                        $encoder->encode($router->getBodyData())
+                    );
                 });
         } catch (RestApiException $e) {
-            /*$res = $res->withStatus($e->getCode());
-            $res = $res->withJson(['errors' => [$e->getMessage()]]);*/
-            var_dump('error: ' . $e->getMessage());
+            $this->service->writeResponse($e->getCode(), 'text/plain', [], $e->getMessage());
         }
     }
 }

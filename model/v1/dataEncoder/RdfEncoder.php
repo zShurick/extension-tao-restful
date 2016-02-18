@@ -15,6 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoRestAPI\model\v1\dataEncoder;
@@ -22,10 +24,15 @@ namespace oat\taoRestAPI\model\v1\dataEncoder;
 
 use oat\taoRestAPI\model\DataEncoderInterface;
 
-class xmlFormat implements DataEncoderInterface
+class RdfEncoder implements DataEncoderInterface
 {
-    public function encode($format)
+    public function encode($data)
     {
         // TODO: Implement encode() method.
+    }
+
+    public function getContentType()
+    {
+        return 'application/rdf+xml';
     }
 }

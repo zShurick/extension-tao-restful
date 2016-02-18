@@ -32,4 +32,9 @@ class JsonEncoder implements DataEncoderInterface
         
         return json_encode($data);
     }
+    
+    public function getContentType()
+    {
+        return 'application/json';
+    }
 }

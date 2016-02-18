@@ -42,6 +42,7 @@ class DataFormat implements HttpDataFormatInterface
     {
         // default
         $format = 'JsonEncoder';
+        
         if(!empty($_SERVER['HTTP_ACCEPT'])){
             try {
                 $accept = tao_helpers_Http::acceptHeader(array_keys($this->acceptedMimeTypes), $_SERVER['HTTP_ACCEPT']);

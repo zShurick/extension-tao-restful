@@ -36,7 +36,25 @@ class HttpRoute extends Router
      * @var DB
      */
     private $db;
-    
+
+    /**
+     * Response headers for header() 
+     * @var array
+     */
+    private $httpHeaders = [];
+
+    /**
+     * Response status code for header() 
+     * @var int
+     */
+    private $httpStatusCode = 200;
+
+    /**
+     * Response Body Data
+     * @var
+     */
+    private $bodyData;
+
     public function __construct()
     {
         $this->db = new DB();
@@ -45,18 +63,26 @@ class HttpRoute extends Router
     public function __invoke(Request $request, Response $response)
     {
         $this->req = $request;
-        $this->res = &$response;
+        $this->res = $response;
         
         $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
     }
 
-    // todo implement in response class or move upper with Exception
-    private $httpHeaders = [];
-    private $httpStatusCode = 200;
-    public function getResponseHeaders()
+    public function getHeaders()
     {
         return $this->httpHeaders;
     }
+
+    public function getStatusCode()
+    {
+        return $this->httpStatusCode;
+    }
+    
+    public function getBodyData()
+    {
+        return $this->bodyData;
+    }
+
     private function addFilterHeadersInResponse(array $addHeaders)
     {
         if (count($addHeaders)) {
@@ -94,7 +120,7 @@ class HttpRoute extends Router
 
         $sort = new Sort(['query' => $queryParams]);
 
-        $data = $this->db->searchInstances([
+        $this->bodyData = $this->db->searchInstances([
 
             // use filter by values
             'filters' => $filter->getFilters(),
@@ -112,15 +138,14 @@ class HttpRoute extends Router
 
         $beforePaginationCount = count($this->db->searchInstances(['filters' => $filter->getFilters()]));
 
-        $paginate->correctPaginationHeader(count($data), $beforePaginationCount);
+        $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
 
         if ($paginate->getStatusCode()) {
             $this->httpStatusCode = $paginate->getStatusCode();
         }
+
         // success headers
         $this->addFilterHeadersInResponse($paginate->getHeaders());
-        
-        var_dump($this->httpHeaders, $this->httpStatusCode, $data);
     }
     
     protected function getOne()
