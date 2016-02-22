@@ -23,6 +23,9 @@
     "require": {
         "oat-sa/oatbox-extension-installer": "dev-master"
     },
+    "require-dev": {
+        "zircote/swagger-php": "^2.0"
+    },
     "autoload" : {
         "psr-4" : {
             "oat\\taoRestAPI\\" : ""
