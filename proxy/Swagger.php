@@ -19,32 +19,33 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\service\docs\proxy;
+namespace oat\taoRestAPI\proxy;
 
 
 use oat\taoRestAPI\exception\RestApiDocsException;
-use oat\taoRestAPI\service\docs\RestApiDocsProxy;
+use oat\taoRestAPI\service\docs\DocsProxy;
 
 /**
  * Use swagger for documentation
- * 
+ *
  * Class Swagger
  * @package oat\taoRestAPI\service\docs\proxy
  */
-class Swagger extends RestApiDocsProxy
+class Swagger extends DocsProxy
 {
 
     /**
-     * @param string $path
-     * @return string Json
+     * @param string $class
+     * @return mixed
      * @throws RestApiDocsException
      */
-    public function getApiDocs( $path = '' )
+    public function getApiDocs($class = '')
     {
+        $path = $this->getPath($class);
         if (!file_exists($path)) {
             throw new RestApiDocsException('Incorrect file path for parsing documentation');
         }
-        
-        return \Swagger\scan( $path );
+
+        return \Swagger\scan($path);
     }
 }

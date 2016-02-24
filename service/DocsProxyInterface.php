@@ -15,37 +15,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- *
+ * 
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\service\docs;
+namespace oat\taoRestAPI\service;
 
 
-use oat\taoRestAPI\service\RestApiDocsInterface;
-use ReflectionClass;
-
-abstract class RestApiDocsProxy implements RestApiDocsInterface
+interface DocsProxyInterface extends DocsInterface
 {
-//    public function getApiDocs($section = '')
-//    {
 
-//        $this->generate();
-
-        //$this->readDocs();
-
-//    }
-
-    public function generate( array $routes = [] )
-    {
-        $jsonDocs = [];
-        foreach ($routes as $name => $class) {
-            $reflectionClass = new ReflectionClass($class);
-            $path = $reflectionClass->getFileName();
-            
-            $jsonDocs[$name] = $this->getApiDocs($path);
-            
-            // todo write after get (in foreach)
-        }
-    }
+    /**
+     * Get all docs
+     * @return array of Json By sections
+     */
+    public function generate();
+    
 }

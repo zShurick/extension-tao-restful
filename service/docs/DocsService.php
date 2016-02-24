@@ -24,12 +24,12 @@ namespace oat\taoRestAPI\service\docs;
 
 use oat\oatbox\service\ConfigurableService;
 use oat\taoRestAPI\exception\RestApiDocsException;
-use oat\taoRestAPI\service\RestApiDocsInterface;
+use oat\taoRestAPI\service\DocsInterface;
 
-class RestApiDocsService extends ConfigurableService implements RestApiDocsInterface
+class DocsService extends ConfigurableService implements DocsInterface
 {
     /**
-     * @var RestApiDocsProxy
+     * @var DocsProxy
      */
     private $proxy = null;
     
@@ -37,27 +37,43 @@ class RestApiDocsService extends ConfigurableService implements RestApiDocsInter
     {
         parent::__construct($options);
         
-        $proxyClass = 'oat\taoRestAPI\service\docs\proxy\\';
+        $proxyClass = 'oat\taoRestAPI\proxy\\';
         $proxyClass .= $this->hasOption('proxy') ? $this->getOption('proxy') : 'Swagger';
         
         $this->proxy = new $proxyClass;
+        
+        if (!($this->proxy instanceof DocsProxy)) {
+            throw new RestApiDocsException(__('Incorrect proxy for Restful documentations'));
+        }
     }
-    
-    public function generate()
+
+    /**
+     * @param string $section
+     * @return array of JSON by sections
+     * @throws RestApiDocsException
+     */
+    public function getApiDocs($section = '')
     {
-        if (count($this->getOptions()) 
+        if (count($this->getOptions())
             && isset($this->getOptions()['routes'])
             && count($this->getOptions()['routes'])
         ) {
-            $this->proxy->generate($this->getOptions()['routes']);
+            
+            $data = [];
+            if(!empty($section)) {
+                var_dump(isset($this->getOptions()['routes'][$section]));
+                if (!isset($this->getOptions()['routes'][$section])) {
+                    throw new RestApiDocsException(__('Incorrect section of the routes for Restful documentations (%s)', $section));
+                } else {
+                    $data[$section] = $this->proxy->getApiDocs( $this->getOptions()['routes'][$section] );
+                }
+            } else {
+                $data = $this->proxy->generate($this->getOptions()['routes']);
+            }
+            return json_encode($data);
         } else {
             throw new RestApiDocsException(__('Incorrect routes data for Restful documentations'));
         }
-    }
-    
-    public function getApiDocs($section = '')
-    {
-        return $this->proxy->getApiDocs( $section = '' );
     }
     
 }

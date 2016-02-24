@@ -26,6 +26,7 @@ use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\example\v1\HttpRoute;
 use oat\taoRestAPI\model\v1\http\Request\DataFormat;
 use oat\taoRestAPI\proxy\BasicAuthentication;
+use oat\taoRestAPI\service\docs\DocsService;
 use oat\taoRestAPI\service\v1\RestApiService;
 use tao_actions_CommonModule;
 
@@ -41,6 +42,11 @@ class api extends tao_actions_CommonModule {
      * @var RestApiService
      */
     protected $service;
+
+    /**
+     * @var DocsService
+     */
+    private $docsService;
     
     /**
      * initialize the services
@@ -48,11 +54,12 @@ class api extends tao_actions_CommonModule {
     public function __construct(){
         parent::__construct();
         $this->service = new RestApiService();
+        $this->docsService = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute']]);
     }
 
     public function documentation()
     {
-        echo "doc";
+        var_dump($this->docsService->getApiDocs());
     }
     
     /**

@@ -23,20 +23,24 @@ namespace oat\taoRestAPI\test\docs;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\service\docs\RestApiDocsService;
+use oat\taoRestAPI\service\docs\DocsService;
 
-class RestApiDocsServiceTest extends TaoPhpUnitTestRunner
+/**
+ * Class RestApiDocsServiceTest
+ * @package oat\taoRestAPI\test\docs
+ */
+class DocsServiceTest extends TaoPhpUnitTestRunner
 {
 
     /**
-     * @var RestApiDocsService
+     * @var DocsService
      */
     private $service = null;
     
     public function setUp()
     {
         parent::setUp();
-        $this->service = new RestApiDocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute']]);
+        $this->service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute']]);
     }
 
     /**
@@ -44,33 +48,41 @@ class RestApiDocsServiceTest extends TaoPhpUnitTestRunner
      */
     public function testInvalidConfigException()
     {
-        $service = new RestApiDocsService([]);
-        $service->generate();
+        $service = new DocsService([]);
+        $service->getApiDocs();
     }
-    
-    public function testGenerateDocs()
+
+    /**
+     * catch trigger_error from Swagger
+     * @expectedException \ReflectionException
+     */
+    public function testWithoutSwaggerPhpDoc()
     {
-        $this->service->generate();
+        $service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\test\docs\RestApiDocsServiceTest']]);
+        $service->getApiDocs();
     }
     
     public function testGetDocs()
     {
-        $this->service->getApiDocs();
-        
+        $json = $this->service->getApiDocs();
+        $data = json_decode($json);
+        $this->assertTrue(isset($data->Example));
+        $this->assertEquals('2.0', $data->Example->swagger);
     }
-
+    
     public function testSection()
     {
-        $this->service->getApiDocs('Example');
+        $json = $this->service->getApiDocs('Example');
+        $data = json_decode($json);
+        $this->assertTrue(isset($data->Example));
+        $this->assertEquals('2.0', $data->Example->swagger);
     }
 
+    /**
+     * @expectedException \oat\taoRestAPI\exception\RestApiDocsException
+     */
     public function testIncorrectSection()
     {
         $this->service->getApiDocs('FailureService');
-    }
-    
-    public function testDuplicateSection()
-    {
-        
     }
 }

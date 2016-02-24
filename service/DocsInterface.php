@@ -22,21 +22,16 @@
 namespace oat\taoRestAPI\service;
 
 
-interface RestApiDocsInterface
+interface DocsInterface
 {
-
-    /**
-     * 
-     * @return
-     */
-    public function generate();
     
     /**
      * 
      * 
      * @param string $section [Name of the Api section ('Example','taoItem', 'taoQtiItem')]
      *    ### if $section is empty - get all sections
-     * @return string JSON
+     * @return mixed
+     * @throws RestApiDocsException
      */
     public function getApiDocs( $section = '' );
 }

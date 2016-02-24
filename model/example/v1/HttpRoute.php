@@ -1,8 +1,22 @@
 <?php
 /**
- * Copyright (c) 2016 Open Assessment Technologies, S.A.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; under version 2
+ * of the License (non-upgradable).
  *
- * @author Alexander Zagovorichev, <zagovorichev@1pt.com>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
+ * 
+ * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoRestAPI\model\example\v1;
@@ -20,6 +34,40 @@ use Request;
 use Response;
 
 
+/**
+ * Class HttpRoute
+ * @package oat\taoRestAPI\model\example\v1
+ * 
+ * #######
+ * ===
+ * 
+ * @SWG\Swagger(
+ *   swagger="2.0",
+ *   schemes={"http"},
+ *   host="tao-rest.loc",
+ *   basePath="/api/v1/",
+ *   @SWG\Info(
+ *     title="TAO Example RestAPI",
+ *     version="1",
+ *     description="RestAPI control for TAO.
+ *      [Learn about TAO](http://www.taotesting.com/).
+ *      For this sample, you can use the api key `oAuth-token-for-test`",
+ *     termsOfService="http://www.taotesting.com/resources/faq/",
+ *     @SWG\Contact(
+ *       name="Open Assessment Technologies S.A.",
+ *       email="contact@taotesting.com",
+ *       url="http://www.taotesting.com/contact/"
+ *     ),
+ *     @SWG\License(
+ *       name="GNU General Public License",
+ *       url="http://www.gnu.org/licenses/gpl.html"
+ *     ),
+ *   )
+ * )
+ * 
+ * ===
+ * #######
+ */
 class HttpRoute extends Router
 {
     /**
