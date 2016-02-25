@@ -57,9 +57,17 @@ class api extends tao_actions_CommonModule {
         $this->docsService = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute']]);
     }
 
+    public function jsonDoc()
+    {
+        $this->returnJson($this->docsService->getApiDocs());
+    }
+    
     public function documentation()
     {
-        var_dump($this->docsService->getApiDocs());
+        $this->setData('jsonData', $this->docsService->getApiDocs());
+        $this->setData('content-template', array('documentation.tpl', 'taoRestAPI'));
+        
+        $this->setView('layout.tpl', 'tao');
     }
     
     /**

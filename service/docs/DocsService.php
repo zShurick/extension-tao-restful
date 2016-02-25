@@ -49,7 +49,7 @@ class DocsService extends ConfigurableService implements DocsInterface
 
     /**
      * @param string $section
-     * @return array of JSON by sections
+     * @return array by sections
      * @throws RestApiDocsException
      */
     public function getApiDocs($section = '')
@@ -61,7 +61,7 @@ class DocsService extends ConfigurableService implements DocsInterface
             
             $data = [];
             if(!empty($section)) {
-                var_dump(isset($this->getOptions()['routes'][$section]));
+                
                 if (!isset($this->getOptions()['routes'][$section])) {
                     throw new RestApiDocsException(__('Incorrect section of the routes for Restful documentations (%s)', $section));
                 } else {
@@ -70,7 +70,7 @@ class DocsService extends ConfigurableService implements DocsInterface
             } else {
                 $data = $this->proxy->generate($this->getOptions()['routes']);
             }
-            return json_encode($data);
+            return $data;
         } else {
             throw new RestApiDocsException(__('Incorrect routes data for Restful documentations'));
         }
