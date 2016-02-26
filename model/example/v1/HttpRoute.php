@@ -33,6 +33,10 @@ use oat\taoRestAPI\test\v1\Mocks\DB;
 use Request;
 use Response;
 
+if (!defined('API_HOST')) {
+    define('API_HOST', trim(preg_replace('|^.*://(.*)$|', "\\1", ROOT_URL), '/'));
+}
+
 /**
  * Class HttpRoute
  * @package oat\taoRestAPI\model\example\v1
@@ -42,9 +46,11 @@ use Response;
  * 
  * @SWG\Swagger(
  *   swagger="2.0",
- *   schemes={"http"},
+ *   schemes={"http","https"},
  *   host=API_HOST,
  *   basePath="/taoRestAPI/v1/",
+ *   consumes={"application/json","application/xml"},
+ *   produces={"application/json","application/xml"},
  *   @SWG\Info(
  *     title="TAO Example RestAPI",
  *     version="1.0.0",
@@ -64,6 +70,26 @@ use Response;
  *   )
  * )
  *
+ * ### Models
+ * ---
+ * @SWG\Definition(
+ *     required={"title", "type"}, 
+ *     @SWG\Xml(name="Resource"),
+ *     @SWG\Property(title="id",format="int64"),
+ *     definition="Resource for test"
+ * )
+ * ===
+ * ###
+ * 
+ * 
+ * ### Tags
+ * ---
+ * @SWG\Tag(
+ *   name="Resources for example",
+ *   description="TaoRestAPI examples"
+ * )
+ * ===
+ * ###
  *
  * 
  * ### List of the resources
@@ -75,31 +101,84 @@ use Response;
  *   description="Get list of the resources",
  *   tags={"Resources for example"},
  *   operationId="getList",
+ *   consumes={"application/xml", "application/json"},
+ *   produces={"application/xml", "application/json"},
  *   @SWG\Response(
  *     response=200,
- *     description="OK"
- *   )
- * )
- * 
- * @SWG\Get(
- *   path="resources?range=0-1",
- *   summary="Pagination",
- *   description="Find resources in range",
- *   tags={"Resources for example"},
- *   operationId="getListPagination",
- *   @SWG\Parameter(
- *      name="range",
- *      in="query",
- *      type="string",
- *      description="Range of the resources",
- *      required=false,
+ *     description="OK",
+ *     @SWG\Schema(ref="#/definitions/Resource")
  *   ),
+ *     
+ *   @SWG\Parameter(
+ *     name="range",
+ *     in="query",
+ *     type="string",
+ *     description="Paginate by the resources {0-1}",
+ *     required=false,
+ *     collectionFormat="multi"
+ *   ),
+ *   @SWG\Parameter(
+ *     name="title",
+ *     in="query",
+ *     description="Filter by title (Potato,Orange)",
+ *     required=false,
+ *     type="string",
+ *     @SWG\Items(type="array"),
+ *     collectionFormat="multi"
+ *   ),
+ *   @SWG\Parameter(
+ *     name="type",
+ *     in="query",
+ *     description="Filter by type (vegetable)",
+ *     required=false,
+ *     type="string",
+ *     @SWG\Items(type="array"),
+ *     collectionFormat="multi"
+ *   ),
+ *   @SWG\Parameter(
+ *     name="fields",
+ *     in="query",
+ *     description="Return only specified fields (title,type)",
+ *     required=false,
+ *     type="string",
+ *     @SWG\Items(type="array"),
+ *     collectionFormat="multi"
+ *   ),
+ *   @SWG\Parameter(
+ *     name="sort",
+ *     in="query",
+ *     description="Sorting by fields ASC (title,type)",
+ *     required=false,
+ *     type="string",
+ *     @SWG\Items(type="array"),
+ *     collectionFormat="multi"
+ *   ),
+ *   @SWG\Parameter(
+ *     name="desc",
+ *     in="query",
+ *     description="Using with ?sort=field, and set DESC direction for field (title,type) ",
+ *     required=false,
+ *     type="string",
+ *     @SWG\Items(type="array"),
+ *     collectionFormat="multi"
+ *   ), 
+ *     
  *   @SWG\Response(
  *     response=206,
- *     description="Partial Content"
- *   )
+ *     description="Partial Content",
+ *     @SWG\Schema(ref="#/definitions/Resource")
+ *   ),
+ *   @SWG\Response(
+ *     response=400,
+ *     description="Incorrect range parameter. Try to use: ?range=0-25"
+ *   ),
+ *   @SWG\Response(
+ *     response=406,
+ *     description="Not acceptable encoding format"
+ *   ),
+ *
  * )
- *  
+ * 
  * ====
  * ###
  * 
@@ -115,7 +194,7 @@ use Response;
  *      in="query",
  *      type="string",
  *      description="Unique Id of the resource",
- *      required=false,
+ *      required=true
  *   ),
  *   @SWG\Response(
  *     response=200,

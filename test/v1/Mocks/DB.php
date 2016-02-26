@@ -124,6 +124,10 @@ class DB
                 $params['sortBy']['desc'] = [];
             }
 
+            if (!isset($params['sortBy']['sort'])) {
+                $params['sortBy']['sort'] = [];
+            }
+            
             foreach ($params['sortBy']['sort'] as $field) {
                 $column = [];
                 foreach ($data as $key => $row) {
