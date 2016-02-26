@@ -16,16 +16,20 @@
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
  * 
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
- *     
- *     @see http://forge.taotesting.com/projects/tao/wiki/Front_js
  */
 
-define(function(){
+define([
+    'jquery',
+    'taoRestAPI/components/swagger/docs'
+], function($, SwaggerDocs) {
+    'use strict';
+    
     return {
-        'Api': {
-            'actions': {
-                'documentation' : 'controller/api/documentation'
-            }
+        start: function start() {
+            
+            var $container = $('.restapi-docs');
+            
+            SwaggerDocs($container).render();
         }
     };
 });

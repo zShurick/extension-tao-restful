@@ -33,7 +33,6 @@ use oat\taoRestAPI\test\v1\Mocks\DB;
 use Request;
 use Response;
 
-
 /**
  * Class HttpRoute
  * @package oat\taoRestAPI\model\example\v1
@@ -44,11 +43,11 @@ use Response;
  * @SWG\Swagger(
  *   swagger="2.0",
  *   schemes={"http"},
- *   host="tao-rest.loc",
- *   basePath="/api/v1/",
+ *   host=API_HOST,
+ *   basePath="/taoRestAPI/v1/",
  *   @SWG\Info(
  *     title="TAO Example RestAPI",
- *     version="1",
+ *     version="1.0.0",
  *     description="RestAPI control for TAO.
  *      [Learn about TAO](http://www.taotesting.com/).
  *      For this sample, you can use the api key `oAuth-token-for-test`",
@@ -62,6 +61,69 @@ use Response;
  *       name="GNU General Public License",
  *       url="http://www.gnu.org/licenses/gpl.html"
  *     ),
+ *   )
+ * )
+ *
+ *
+ * 
+ * ### List of the resources
+ * ---
+ * 
+ * @SWG\Get(
+ *   path="resources",
+ *   summary="All resources",
+ *   description="Get list of the resources",
+ *   tags={"Resources for example"},
+ *   operationId="getList",
+ *   @SWG\Response(
+ *     response=200,
+ *     description="OK"
+ *   )
+ * )
+ * 
+ * @SWG\Get(
+ *   path="resources?range=0-1",
+ *   summary="Pagination",
+ *   description="Find resources in range",
+ *   tags={"Resources for example"},
+ *   operationId="getListPagination",
+ *   @SWG\Parameter(
+ *      name="range",
+ *      in="query",
+ *      type="string",
+ *      description="Range of the resources",
+ *      required=false,
+ *   ),
+ *   @SWG\Response(
+ *     response=206,
+ *     description="Partial Content"
+ *   )
+ * )
+ *  
+ * ====
+ * ###
+ * 
+ * ### Get one resource 
+ * 
+ * @SWG\Get(
+ *   path="resources/{id}",
+ *   summary="Find resource by ID",
+ *   tags={"Resources for example"},
+ *   operationId="getItem",
+ *   @SWG\Parameter(
+ *      name="id",
+ *      in="query",
+ *      type="string",
+ *      description="Unique Id of the resource",
+ *      required=false,
+ *   ),
+ *   @SWG\Response(
+ *     response=200,
+ *     description="A list with resources|Resource was found"
+ *   ),
+ *   @SWG\Response(
+ *     response="default",
+ *     description="an unexpected error"
  *   )
  * )
  * 

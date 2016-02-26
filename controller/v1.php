@@ -36,7 +36,7 @@ use tao_actions_CommonModule;
  * @license GPL-2.0
  *
  */
-class api extends tao_actions_CommonModule {
+class v1 extends tao_actions_CommonModule {
 
     /**
      * @var RestApiService
@@ -59,21 +59,26 @@ class api extends tao_actions_CommonModule {
 
     public function jsonDoc()
     {
-        $this->returnJson($this->docsService->getApiDocs());
+        $this->returnJson($this->docsService->getApiDocs()['Example']);
     }
     
     public function documentation()
     {
-        $this->setData('jsonData', $this->docsService->getApiDocs());
-        $this->setData('content-template', array('documentation.tpl', 'taoRestAPI'));
+        $this->defaultData();
+
+        //$this->setData('jsonData', $this->docsService->getApiDocs());
+        //$this->setData('content-template', array('documentation.tpl', 'taoRestAPI'));
+
+        //$this->setData('content-template', array('swagger/index.html', 'taoRestAPI'));
+        $this->setView('api/index.html', 'taoRestAPI');
         
-        $this->setView('layout.tpl', 'tao');
+        //$this->setView('layout.tpl', 'tao');
     }
     
     /**
      * A possible entry point to tao
      */
-    public function v1() {
+    public function resources() {
         
         try {
             $this->service
