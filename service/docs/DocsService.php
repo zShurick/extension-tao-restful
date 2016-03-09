@@ -70,10 +70,12 @@ class DocsService extends ConfigurableService implements DocsInterface
             } else {
                 $data = $this->proxy->generate($this->getOptions()['routes']);
             }
+        
             return $data;
-        } else {
-            throw new RestApiDocsException(__('Incorrect routes data for Restful documentations'));
         }
+        
+        throw new RestApiDocsException(__('Incorrect routes data for Restful documentations'));
+        
     }
     
 }

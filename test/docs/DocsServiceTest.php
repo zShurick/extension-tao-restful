@@ -64,18 +64,16 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     
     public function testGetDocs()
     {
-        $json = $this->service->getApiDocs();
-        $data = json_decode($json);
-        $this->assertTrue(isset($data->Example));
-        $this->assertEquals('2.0', $data->Example->swagger);
+        $data = $this->service->getApiDocs();
+        $this->assertTrue(isset($data['Example']));
+        $this->assertEquals('2.0', $data['Example']->swagger);
     }
     
     public function testSection()
     {
-        $json = $this->service->getApiDocs('Example');
-        $data = json_decode($json);
-        $this->assertTrue(isset($data->Example));
-        $this->assertEquals('2.0', $data->Example->swagger);
+        $data = $this->service->getApiDocs('Example');
+        $this->assertTrue(isset($data['Example']));
+        $this->assertEquals('2.0', $data['Example']->swagger);
     }
 
     /**
