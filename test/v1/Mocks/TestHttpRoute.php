@@ -206,11 +206,11 @@ class TestHttpRoute extends Router
         ]);
         
         try {
-        $paginate = new Paginate([
-            'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
-            'total' => count($this->getResources()),
-            'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
-        ]);
+            $paginate = new Paginate([
+                'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
+                'total' => count($this->getResources()),
+                'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
+            ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
             // add failed headers if exists
             $this->addFilterHeadersInResponse($e->getHeaders());

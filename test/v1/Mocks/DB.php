@@ -6,6 +6,7 @@
  */
 
 namespace oat\taoRestAPI\test\v1\Mocks;
+use oat\taoRestAPI\model\DataStorageInterface;
 
 
 /**
@@ -15,8 +16,19 @@ namespace oat\taoRestAPI\test\v1\Mocks;
  * 
  * @package oat\taoRestAPI\test\v1\Mocks
  */
-class DB
+class DB implements DataStorageInterface
 {
+    
+    public function getFields()
+    {
+        return array_keys($this->getResources()[0]);
+    }
+    
+    public function getCount()
+    {
+        return count($this->getResources());
+    }
+
     /**
      * Data for testing and example of workflow
      * @var array
@@ -93,7 +105,7 @@ class DB
      * @param array $params
      * @return array|mixed
      */
-    public function searchInstances($params = [])
+    public function searchInstances(array $params = null)
     {
         $data = $this->getResources();
 

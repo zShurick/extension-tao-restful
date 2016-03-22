@@ -24,6 +24,7 @@ namespace oat\taoRestAPI\model\example\v1;
 
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
+use oat\taoRestAPI\model\DataStorageInterface;
 use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
@@ -222,11 +223,6 @@ class HttpRoute extends Router
     protected $res;
 
     /**
-     * @var DB
-     */
-    private $db;
-
-    /**
      * Response headers for header() 
      * @var array
      */
@@ -244,9 +240,14 @@ class HttpRoute extends Router
      */
     private $bodyData;
 
-    public function __construct()
+    /**
+     * @var DataStorageInterface
+     */
+    private $storage;
+    
+    public function __construct(DataStorageInterface $storage)
     {
-        $this->db = new DB();
+        $this->storage = $storage;
     }
 
     public function __invoke(Request $request, Response $response)
@@ -287,14 +288,14 @@ class HttpRoute extends Router
 
         $filter = new Filter([
             'query' => $queryParams,
-            'fields' => array_keys($this->db->getResources()[0]),
+            'fields' => $this->storage->getFields(),
         ]);
 
         try {
             $paginate = new Paginate([
                 'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
-                'total' => count($this->db->getResources()),
-                'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
+                'total' => $this->storage->getCount(),
+                'paginationUrl' => ROOT_URL . '/v1/items?range=',
             ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
             // add failed headers if exists
@@ -304,12 +305,12 @@ class HttpRoute extends Router
 
         $partial = new Partial([
             'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->db->getResources()[0]),
+            'fields' => $this->storage->getFields(),
         ]);
 
         $sort = new Sort(['query' => $queryParams]);
 
-        $this->bodyData = $this->db->searchInstances([
+        $this->bodyData = $this->storage->searchInstances([
 
             // use filter by values
             'filters' => $filter->getFilters(),
@@ -325,7 +326,7 @@ class HttpRoute extends Router
             'limit' => $paginate->length(),
         ]);
 
-        $beforePaginationCount = count($this->db->searchInstances(['filters' => $filter->getFilters()]));
+        $beforePaginationCount = count($this->storage->searchInstances(['filters' => $filter->getFilters()]));
 
         $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
 
