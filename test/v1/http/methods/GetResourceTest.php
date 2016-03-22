@@ -22,17 +22,14 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
-class GetResourceTest extends TaoPhpUnitTestRunner
+class GetResourceTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-    
     public function testHttpGetResource()
     {
         $this->request('GET', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(5, count($this->response->getResourceData()));
@@ -46,7 +43,7 @@ class GetResourceTest extends TaoPhpUnitTestRunner
     public function testHttpGetWithResourceWithParams()
     {
         $this->request('GET', '/resources/{id}', '/resources/5?fields=id,title,form', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(3, count($this->response->getResourceData()));
@@ -55,5 +52,4 @@ class GetResourceTest extends TaoPhpUnitTestRunner
         $this->assertEquals('circle', $this->response->getResourceData()['form']);
         $this->assertEquals(200, $this->response->getStatusCode());
     }
-    
 }

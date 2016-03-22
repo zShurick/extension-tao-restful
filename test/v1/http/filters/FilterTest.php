@@ -22,19 +22,15 @@
 namespace oat\taoRestAPI\test\v1\http\Response;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
-class FilterTest extends TaoPhpUnitTestRunner
+class FilterTest extends RestApiUnitTestRunner
 {
-
-    use EnvironmentTrait;
 
     public function testFilter()
     {
         $this->request('GET', '/resources', '/resources?type=citrus', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
         
         $this->assertEquals(3, count($this->response->getResourceData()));
@@ -49,7 +45,7 @@ class FilterTest extends TaoPhpUnitTestRunner
     public function testMultipleFilter()
     {
         $this->request('GET', '/resources', '/resources?type=citrus,vegetable&form=circle', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(2, count($this->response->getResourceData()));

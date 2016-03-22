@@ -22,16 +22,13 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\Response;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 
-class PutTest extends TaoPhpUnitTestRunner
+class PutTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-   
     /**
      * Update full resource data
      * Update only fields that is set, all the other fields will be deleted
@@ -65,7 +62,7 @@ class PutTest extends TaoPhpUnitTestRunner
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals($putData, $this->route->getResources()[0]);
+        $this->assertEquals($putData, $this->getStorage()->searchInstances()[0]);
     }
 
     public function testHttpPartialPut()
@@ -93,8 +90,8 @@ class PutTest extends TaoPhpUnitTestRunner
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals($putData, $this->route->getResources()[0]);
-        $this->assertEquals(3, count($this->route->getResources()[0]));
+        $this->assertEquals($putData, $this->getStorage()->searchInstances()[0]);
+        $this->assertEquals(3, count($this->getStorage()->searchInstances()[0]));
     }
 
     public function testHttpPutInvalidData()
@@ -121,7 +118,6 @@ class PutTest extends TaoPhpUnitTestRunner
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
-        $this->assertNotEquals($putData, $this->route->getResources()[0]);
+        $this->assertNotEquals($putData, $this->getStorage()->searchInstances()[0]);
     }
-
 }

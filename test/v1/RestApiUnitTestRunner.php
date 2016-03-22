@@ -19,25 +19,33 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\test\v1\http\Response;
+namespace oat\taoRestAPI\test\v1;
 
 
-use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
+use oat\tao\test\TaoPhpUnitTestRunner;
+use oat\taoRestAPI\test\v1\Mocks\DB;
+use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
+use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 
-class FieldsTest extends RestApiUnitTestRunner
+abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
 {
+    use EnvironmentTrait;
 
-    public function testFields()
+    private $storage;
+    
+    public function getStorage()
     {
-        $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res);
-        });
+        if (!$this->storage) {
+            $this->storage = new DB();
+        }
         
-        $this->assertEquals(['title', 'type'], array_keys($this->response->getResourceData()[0]));
-        $this->assertEquals(2, count($this->response->getResourceData()[0]));
-        $this->assertEquals(200, $this->response->getStatusCode());
-        $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(['0-4/5'], $this->response->getHeader('Content-Range'));
-        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        return $this->storage;
+    }
+    
+    public function routerRunner($req, &$res)
+    {
+        $route = new TestHttpRoute($this->getStorage());
+        $route($req, $res);
+        return $this->response = $res;
     }
 }

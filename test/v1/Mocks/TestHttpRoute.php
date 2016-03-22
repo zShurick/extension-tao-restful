@@ -27,10 +27,10 @@ use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
-use oat\taoRestAPI\model\v1\http\Request\Router;
+use oat\taoRestAPI\model\v1\http\RouterAdapter\AbstractRouterAdapter;
 use Psr\Http\Message\ServerRequestInterface;
 
-class TestHttpRoute extends Router
+class TestHttpRoute extends AbstractRouterAdapter
 {
 
     /**
@@ -42,16 +42,6 @@ class TestHttpRoute extends Router
      * @var Response
      */
     protected $res;
-
-    /**
-     * @var DB
-     */
-    private $db;
-    
-    public function __construct()
-    {
-        $this->db = new DB();
-    }
     
     /**
      * Rest API auto runner
@@ -81,11 +71,12 @@ class TestHttpRoute extends Router
 
     /**
      * For phpunit testing data changing (put, post, delete, patch)
+     * 
      * @return array
      */
     public function getResources()
     {
-        return $this->db->getResources();
+        return $this->storage()->searchInstances();
     }
 
     /**
@@ -142,7 +133,7 @@ class TestHttpRoute extends Router
         }
 
         //replace
-        $this->db->saveResource(array_search($this->getResourceId(), $ids), $resource);
+        $this->storage()->saveResource(array_search($this->getResourceId(), $ids), $resource);
     }
 
     public function patch()
@@ -174,7 +165,7 @@ class TestHttpRoute extends Router
             $updResource[$key] = $value;
         }
         
-        $this->db->saveResource($resourceKey, $updResource);
+        $this->storage()->saveResource($resourceKey, $updResource);
     }
 
     public function delete()
@@ -186,7 +177,7 @@ class TestHttpRoute extends Router
             $ids[$key] = $row['id'];
         }
         if (in_array($this->getResourceId(), $ids)) {
-            $this->db->deleteResource(array_search($this->getResourceId(), $ids));
+            $this->storage()->deleteResource(array_search($this->getResourceId(), $ids));
         }
 
     }
@@ -224,7 +215,7 @@ class TestHttpRoute extends Router
         
         $sort = new Sort(['query' => $queryParams]);
 
-        $data = $this->db->searchInstances([
+        $data = $this->storage()->searchInstances([
 
             // use filter by values
             'filters' => $filter->getFilters(),
@@ -240,7 +231,7 @@ class TestHttpRoute extends Router
             'limit' => $paginate->length(),
         ]);
 
-        $beforePaginationCount = count($this->db->searchInstances(['filters' => $filter->getFilters()]));
+        $beforePaginationCount = count($this->storage()->searchInstances(['filters' => $filter->getFilters()]));
         
         $paginate->correctPaginationHeader(count($data), $beforePaginationCount);
 

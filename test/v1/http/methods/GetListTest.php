@@ -22,13 +22,10 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
-class GetListTest extends TaoPhpUnitTestRunner
+class GetListTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-    
     /**
      * Order of operations for request
      * Filtering
@@ -41,7 +38,7 @@ class GetListTest extends TaoPhpUnitTestRunner
     public function testHttpGetSortedPartialRangeOfList()
     {
         $this->request('GET', '/resources', '/resources?sort=title&range=0-3&fields=title,type', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(4, count($this->response->getResourceData()));
@@ -63,7 +60,7 @@ class GetListTest extends TaoPhpUnitTestRunner
     public function testHttpGetFilteredSortedPartialRangeOfList()
     {
         $this->request('GET', '/resources', '/resources?sort=title&range=0-3&fields=title,type&type=citrus', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(3, count($this->response->getResourceData()));
@@ -85,7 +82,7 @@ class GetListTest extends TaoPhpUnitTestRunner
     public function testFilterWithRange()
     {
         $this->request('GET', '/resources', '/resources?type=citrus&range=0-0', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(1, count($this->response->getResourceData()));

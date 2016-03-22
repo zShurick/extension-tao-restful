@@ -22,19 +22,15 @@
 namespace oat\taoRestAPI\test\v1\http\Response;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
-class SortTest extends TaoPhpUnitTestRunner
+class SortTest extends RestApiUnitTestRunner
 {
-
-    use EnvironmentTrait;
 
     public function testSortByOneField()
     {
         $this->request('GET', '/resources', '/resources?sort=title', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
         
         $this->assertEquals(5, count($this->response->getResourceData()));
@@ -52,7 +48,7 @@ class SortTest extends TaoPhpUnitTestRunner
     public function testSortByManyFields()
     {
         $this->request('GET', '/resources', '/resources?sort=form,type,id', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(5, count($this->response->getResourceData()));
@@ -74,7 +70,7 @@ class SortTest extends TaoPhpUnitTestRunner
     public function testSortDesc()
     {
         $this->request('GET', '/resources', '/resources?sort=title&desc=title', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(5, count($this->response->getResourceData()));

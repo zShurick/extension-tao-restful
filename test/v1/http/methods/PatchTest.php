@@ -22,16 +22,13 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\Response;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 
-class PatchTest extends TaoPhpUnitTestRunner
+class PatchTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-   
     /**
      * Partial data update
      * Update only the specified data
@@ -60,9 +57,9 @@ class PatchTest extends TaoPhpUnitTestRunner
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(5, count($this->route->getResources()[0]));
-        $this->assertEquals('Carrot', $this->route->getResources()[0]['title']);
-        $this->assertEquals('orange', $this->route->getResources()[0]['color']);
+        $this->assertEquals(5, count($this->getStorage()->searchInstances()[0]));
+        $this->assertEquals('Carrot', $this->getStorage()->searchInstances()[0]['title']);
+        $this->assertEquals('orange', $this->getStorage()->searchInstances()[0]['color']);
     }
 
     public function testHttpPatchOnListOfTheData()

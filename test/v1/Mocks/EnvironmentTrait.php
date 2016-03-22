@@ -46,17 +46,12 @@ trait EnvironmentTrait
     /**
      * @var Request
      */
-    private $request;
+    protected $request;
 
     /**
      * @var Response
      */
-    private $response;
-
-    /**
-     * @var TestHttpRoute
-     */
-    private $route;
+    protected $response;
 
     /**
      * Http request
@@ -116,15 +111,5 @@ trait EnvironmentTrait
 
         // Invoke app
         return $app($this->request, $this->response);
-    }
-
-    public function routerRunner($req, &$res, array $args = [])
-    {
-
-        $this->route = $route = new TestHttpRoute();
-        // __invoke
-        $route($req, $res);
-
-        return $this->response = $res;
     }
 }

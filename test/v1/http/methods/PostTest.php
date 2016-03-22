@@ -22,16 +22,14 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\Response;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 
-class PostTest extends TaoPhpUnitTestRunner
+class PostTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-    
+
     public function testHttpPost()
     {
         // replace default post to post with data

@@ -19,25 +19,30 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\test\v1\http\Response;
+namespace oat\taoRestAPI\model\v1\http\RouterAdapter;
 
 
-use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
+use oat\taoRestAPI\model\DataStorageInterface;
+use oat\taoRestAPI\model\v1\http\Request\Router;
 
-class FieldsTest extends RestApiUnitTestRunner
+abstract class AbstractRouterAdapter extends Router
 {
+    /**
+     * @var DataStorageInterface
+     */
+    private $storage;
 
-    public function testFields()
+    public function __construct(DataStorageInterface $storage)
     {
-        $this->request('GET', '/resources', '/resources?fields=title,type', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res);
-        });
-        
-        $this->assertEquals(['title', 'type'], array_keys($this->response->getResourceData()[0]));
-        $this->assertEquals(2, count($this->response->getResourceData()[0]));
-        $this->assertEquals(200, $this->response->getStatusCode());
-        $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(['0-4/5'], $this->response->getHeader('Content-Range'));
-        $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
+        $this->storage = $storage;
     }
+
+    /**
+     * @return DataStorageInterface
+     */
+    public function storage()
+    {
+        return $this->storage;
+    }
+    
 }

@@ -22,37 +22,30 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
-use oat\taoRestAPI\exception\HttpRequestException;
-use oat\taoRestAPI\model\v1\http\Response;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
-use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
-use Slim\Http\Environment;
-use Slim\Http\Request;
+use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
-class DeleteTest extends TaoPhpUnitTestRunner
+class DeleteTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-   
+
     public function testHttpDelete()
     {
         $this->request('DELETE', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals(4, count($this->route->getResources()));
+        $this->assertEquals(4, count($this->getStorage()->searchInstances()));
     }
 
     public function testHttpDeleteOnList()
     {
         $this->request('DELETE', '/resources', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
+            return $this->routerRunner($req, $res);
         });
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
-        $this->assertEquals(5, count($this->route->getResources()));
+        $this->assertEquals(5, count($this->getStorage()->searchInstances()));
     }
 }
