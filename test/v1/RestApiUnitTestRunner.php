@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
+ *
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
@@ -23,29 +23,70 @@ namespace oat\taoRestAPI\test\v1;
 
 
 use oat\tao\test\TaoPhpUnitTestRunner;
+use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\test\v1\Mocks\DB;
 use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
+use oat\taoRestAPI\test\v1\Mocks\Response;
 use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
+use Slim\Http\Request;
 
 abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
 {
     use EnvironmentTrait;
 
     private $storage;
-    
+
+    public function routerRunner(Request $req, Response &$res)
+    {
+        $route = new TestHttpRoute($this->getStorage());
+        try {
+            $route($req);
+
+            $res = $res->withStatus($route->getStatusCode());
+
+            // mock func for test
+            $res->setResourceData($route->getBodyData());
+
+        } catch (RestApiException $e) {
+            $res = $res->withJson(['errors' => [$e->getMessage()]]);
+            $res = $res->withStatus($e->getCode());
+        }
+
+        $this->addHeadersInResponse($route->getHeaders(), $res);
+        
+        return $this->response = $res;
+    }
+
     public function getStorage()
     {
         if (!$this->storage) {
             $this->storage = new DB();
         }
-        
+
         return $this->storage;
     }
-    
-    public function routerRunner($req, &$res)
+
+    /**
+     * @param $router
+     * @param $encoder
+     * @param $req
+     * @param $res
+     * @return Response
+     */
+    protected function runRouterTest($router, $encoder, $req, &$res)
     {
-        $route = new TestHttpRoute($this->getStorage());
-        $route($req, $res);
-        return $this->response = $res;
+        $router($req);
+        $res = $res->withStatus($router->getStatusCode());
+        $this->addHeadersInResponse($router->getHeaders(), $res);
+        $res->write($encoder->encode($router->getBodyData()));
+    }
+    
+    private function addHeadersInResponse(array $addHeaders, Response &$res)
+    {
+        if (count($addHeaders)) {
+            foreach ($addHeaders as $name => $header) {
+                $res = $res->withHeader($name, $header);
+            }
+        }
     }
 }

@@ -44,35 +44,35 @@ abstract class Router implements HttpRouterInterface
 
     public function post()
     {
-        if (!empty($this->resourceId)) {
+        if ($this->getResourceId()) {
             throw new HttpRequestException(__('Forbidden to creating new resource on object'), 400);
         }
     }
 
     public function put()
     {
-        if (empty($this->resourceId)) {
+        if (!$this->getResourceId()) {
             throw new HttpRequestException(__('Forbidden to updating list of the resources'), 400);
         }
     }
 
     public function patch()
     {
-        if (empty($this->resourceId)) {
+        if (!$this->getResourceId()) {
             throw new HttpRequestException(__('Forbidden to updating list of the resources'), 400);
         }
     }
 
     public function delete()
     {
-        if (empty($this->resourceId)) {
+        if (!$this->getResourceId()) {
             throw new HttpRequestException(__('Forbidden to deleting list of the resources'), 400);
         }
     }
 
     public function options()
     {
-        return empty($this->resourceId)
+        return !$this->getResourceId()
             ? ['POST', 'GET', 'OPTIONS']
             : ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
     }
@@ -90,6 +90,11 @@ abstract class Router implements HttpRouterInterface
         $this->resourceId = $id;
     }
 
+    /**
+     * @param string $method
+     * @param string $id
+     * @throws HttpRequestException
+     */
     protected function runApiCommand($method = '', $id = '')
     {
         $this->setResourceId($id);

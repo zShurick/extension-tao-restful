@@ -22,7 +22,6 @@
 namespace oat\taoRestAPI\test\v1\http\methods;
 
 
-use oat\taoRestAPI\model\v1\http\Response;
 use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 
 class OptionsTest extends RestApiUnitTestRunner
@@ -36,7 +35,7 @@ class OptionsTest extends RestApiUnitTestRunner
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals('["POST","GET","OPTIONS"]', (string)$this->response->getBody());
+        $this->assertEquals(["POST","GET","OPTIONS"], $this->response->getResourceData());
     }
     
     public function testHttpResourceOptions()
@@ -47,6 +46,6 @@ class OptionsTest extends RestApiUnitTestRunner
 
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
-        $this->assertEquals('["GET","PUT","PATCH","DELETE","OPTIONS"]', (string)$this->response->getBody());
+        $this->assertEquals(["GET","PUT","PATCH","DELETE","OPTIONS"], $this->response->getResourceData());
     }
 }

@@ -19,36 +19,10 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\model\v1\http\RouterAdapter;
 
 
-interface DataStorageInterface
+class TaoRouterAdapter extends AbstractRouterAdapter
 {
-    /**
-     * List of the model fields
-     * 
-     * @return array
-     */
-    public function getFields();
 
-    /**
-     * Search instances
-     * 
-     * @param array $params
-     * @return array
-     */
-    public function searchInstances(array $params = null);
-
-    /**
-     * @param $key
-     * @return string resource identifier
-     */
-    public function delete($key);
-
-    /**
-     * @param $key
-     * @param array $resource
-     * @return string resource identifier
-     */
-    public function save($key, array $resource);
 }

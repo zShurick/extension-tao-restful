@@ -22,19 +22,16 @@
 namespace oat\taoRestAPI\test\v1;
 
 
-use oat\tao\test\TaoPhpUnitTestRunner;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\v1\http\Request\DataFormat;
 use oat\taoRestAPI\service\v1\RestApiService;
 use oat\taoRestAPI\test\v1\Mocks\DB;
-use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\FailedAuth;
+use oat\taoRestAPI\test\v1\Mocks\Response;
 use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 
-class RestApiServiceTest extends TaoPhpUnitTestRunner
+class RestApiServiceTest extends RestApiUnitTestRunner
 {
-    use EnvironmentTrait;
-
     /**
      * @var RestApiService
      */
@@ -51,7 +48,7 @@ class RestApiServiceTest extends TaoPhpUnitTestRunner
         $this->service = new RestApiService();
         $this->storage = new DB();
     }
-
+    
     public function testServiceAuth()
     {
         $this->request('GET', '/resources', function ($req, $res, $args) {
@@ -134,8 +131,7 @@ class RestApiServiceTest extends TaoPhpUnitTestRunner
                     ->setEncoder(new DataFormat())
                     ->setRouter(new TestHttpRoute($this->storage))
                     ->execute(function ($router, $encoder) use ($req, &$res) {
-                        $router($req, $res);
-                        $res->write($encoder->encode($res->getResourceData()));
+                        $this->runRouterTest($router, $encoder, $req, $res);
                     });
             } catch (RestApiException $e) {
                 $res = $res->withStatus($e->getCode());
@@ -161,8 +157,7 @@ class RestApiServiceTest extends TaoPhpUnitTestRunner
                 $this->service
                     ->setRouter(new TestHttpRoute($this->storage))
                     ->execute(function ($router, $encoder) use ($req, &$res) {
-                        $router($req, $res);
-                        $res->write($encoder->encode($res->getResourceData()));
+                        $this->runRouterTest($router, $encoder, $req, $res);
                     });
             } catch (RestApiException $e) {
                 $res = $res->withStatus($e->getCode());
@@ -190,8 +185,7 @@ class RestApiServiceTest extends TaoPhpUnitTestRunner
                     ->setEncoder(new DataFormat())
                     ->setRouter(new TestHttpRoute($this->storage))
                     ->execute(function ($router, $encoder) use ($req, &$res) {
-                        $router($req, $res);
-                        $res->write($encoder->encode($res->getResourceData()));
+                        $this->runRouterTest($router, $encoder, $req, $res);
                     });
             } catch (RestApiException $e) {
                 $res = $res->withStatus($e->getCode());

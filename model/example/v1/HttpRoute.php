@@ -28,9 +28,8 @@ use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
-use oat\taoRestAPI\model\v1\http\RouterAdapter\AbstractRouterAdapter;
+use oat\taoRestAPI\model\v1\http\Request\RouterAdapter\AbstractRouterAdapter;
 use Request;
-use Response;
 
 if (!defined('API_HOST')) {
     define('API_HOST', trim(preg_replace('|^.*://(.*)$|', "\\1", ROOT_URL), '/'));
@@ -215,59 +214,10 @@ class HttpRoute extends AbstractRouterAdapter
      */
     protected $req;
 
-    /**
-     * @var Response
-     */
-    protected $res;
-
-    /**
-     * Response headers for header() 
-     * @var array
-     */
-    private $httpHeaders = [];
-
-    /**
-     * Response status code for header() 
-     * @var int
-     */
-    private $httpStatusCode = 200;
-
-    /**
-     * Response Body Data
-     * @var
-     */
-    private $bodyData;
-
-    public function __invoke(Request $request, Response $response)
+    public function __invoke(Request $request)
     {
         $this->req = $request;
-        $this->res = $response;
-        
         $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
-
-    public function getHeaders()
-    {
-        return $this->httpHeaders;
-    }
-
-    public function getStatusCode()
-    {
-        return $this->httpStatusCode;
-    }
-    
-    public function getBodyData()
-    {
-        return $this->bodyData;
-    }
-
-    private function addFilterHeadersInResponse(array $addHeaders)
-    {
-        if (count($addHeaders)) {
-            foreach ($addHeaders as $name => $headers) {
-                $this->httpHeaders[$name] = $headers; 
-            }
-        }
     }
     
     protected function getList()
@@ -287,7 +237,7 @@ class HttpRoute extends AbstractRouterAdapter
             ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
             // add failed headers if exists
-            $this->addFilterHeadersInResponse($e->getHeaders());
+            $this->addHeaders($e->getHeaders());
             throw new HttpRequestException($e->getMessage(), $e->getCode());
         }
 
@@ -319,11 +269,11 @@ class HttpRoute extends AbstractRouterAdapter
         $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
 
         if ($paginate->getStatusCode()) {
-            $this->httpStatusCode = $paginate->getStatusCode();
+            $this->setStatusCode($paginate->getStatusCode());
         }
 
         // success headers
-        $this->addFilterHeadersInResponse($paginate->getHeaders());
+        $this->addHeaders($paginate->getHeaders());
     }
     
     protected function getOne()
