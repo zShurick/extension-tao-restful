@@ -15,19 +15,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
+ *
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
 namespace oat\taoRestAPI\model\example\v1;
 
 
-use oat\taoRestAPI\exception\HttpRequestException;
-use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
-use oat\taoRestAPI\model\v1\http\filters\Filter;
-use oat\taoRestAPI\model\v1\http\filters\Paginate;
-use oat\taoRestAPI\model\v1\http\filters\Partial;
-use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\RouterAdapter\AbstractRouterAdapter;
 use Request;
 
@@ -38,10 +32,10 @@ if (!defined('API_HOST')) {
 /**
  * Class HttpRoute
  * @package oat\taoRestAPI\model\example\v1
- * 
+ *
  * #######
  * ===
- * 
+ *
  * @SWG\Swagger(
  *   swagger="2.0",
  *   schemes={"http","https"},
@@ -71,15 +65,15 @@ if (!defined('API_HOST')) {
  * ### Models
  * ---
  * @SWG\Definition(
- *     required={"title", "type"}, 
+ *     required={"title", "type"},
  *     @SWG\Xml(name="Resource"),
  *     @SWG\Property(title="id",format="int64"),
  *     definition="Resource for test"
  * )
  * ===
  * ###
- * 
- * 
+ *
+ *
  * ### Tags
  * ---
  * @SWG\Tag(
@@ -89,10 +83,10 @@ if (!defined('API_HOST')) {
  * ===
  * ###
  *
- * 
+ *
  * ### List of the resources
  * ---
- * 
+ *
  * @SWG\Get(
  *   path="resources",
  *   summary="All resources",
@@ -106,7 +100,7 @@ if (!defined('API_HOST')) {
  *     description="OK",
  *     @SWG\Schema(ref="#/definitions/Resource")
  *   ),
- *     
+ *
  *   @SWG\Parameter(
  *     name="range",
  *     in="query",
@@ -159,8 +153,8 @@ if (!defined('API_HOST')) {
  *     type="string",
  *     @SWG\Items(type="array"),
  *     collectionFormat="multi"
- *   ), 
- *     
+ *   ),
+ *
  *   @SWG\Response(
  *     response=206,
  *     description="Partial Content",
@@ -176,12 +170,12 @@ if (!defined('API_HOST')) {
  *   ),
  *
  * )
- * 
+ *
  * ====
  * ###
- * 
- * ### Get one resource 
- * 
+ *
+ * ### Get one resource
+ *
  * @SWG\Get(
  *   path="resources/{id}",
  *   summary="Find resource by ID",
@@ -203,7 +197,7 @@ if (!defined('API_HOST')) {
  *     description="an unexpected error"
  *   )
  * )
- * 
+ *
  * ===
  * #######
  */
@@ -219,63 +213,13 @@ class HttpRoute extends AbstractRouterAdapter
         $this->req = $request;
         $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
     }
-    
-    protected function getList()
+
+    protected function getList(array $params = null)
     {
         $queryParams = $this->req->getParameters();
-
-        $filter = new Filter([
-            'query' => $queryParams,
-            'fields' => $this->storage()->getFields(),
-        ]);
-
-        try {
-            $paginate = new Paginate([
-                'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
-                'total' => $this->storage()->getCount(),
-                'paginationUrl' => ROOT_URL . '/v1/items?range=',
-            ]);
-        } catch (HttpRequestExceptionWithHeaders $e) {
-            // add failed headers if exists
-            $this->addHeaders($e->getHeaders());
-            throw new HttpRequestException($e->getMessage(), $e->getCode());
-        }
-
-        $partial = new Partial([
-            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => $this->storage()->getFields(),
-        ]);
-
-        $sort = new Sort(['query' => $queryParams]);
-
-        $this->bodyData = $this->storage()->searchInstances([
-
-            // use filter by values
-            'filters' => $filter->getFilters(),
-
-            // columns
-            'fields' => $partial->getFields(),
-
-            // sort
-            'sortBy' => $sort->getSorting(),
-
-            // pagination
-            'offset' => $paginate->offset(),
-            'limit' => $paginate->length(),
-        ]);
-
-        $beforePaginationCount = count($this->storage()->searchInstances(['filters' => $filter->getFilters()]));
-
-        $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
-
-        if ($paginate->getStatusCode()) {
-            $this->setStatusCode($paginate->getStatusCode());
-        }
-
-        // success headers
-        $this->addHeaders($paginate->getHeaders());
+        parent::getList($queryParams);
     }
-    
+
     protected function getOne()
     {
         echo 'one';

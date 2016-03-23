@@ -22,8 +22,13 @@
 namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
-use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\exception\HttpRequestException;
+use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
 use oat\taoRestAPI\model\DataStorageInterface;
+use oat\taoRestAPI\model\v1\http\filters\Filter;
+use oat\taoRestAPI\model\v1\http\filters\Paginate;
+use oat\taoRestAPI\model\v1\http\filters\Partial;
+use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\Router;
 
 abstract class AbstractRouterAdapter extends Router
@@ -92,5 +97,69 @@ abstract class AbstractRouterAdapter extends Router
     {
         $this->httpStatusCode = intval($status);
     }
+
+    protected function getList(array $queryParams=null)
+    {
+        
+        $filter = new Filter([
+            'query' => $queryParams,
+            'fields' => $this->storage()->getFields(),
+        ]);
+        
+        try {
+            $paginate = new Paginate([
+                'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
+                'total' => count($this->storage()->searchInstances()),
+                'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
+            ]);
+        } catch (HttpRequestExceptionWithHeaders $e) {
+            // add failed headers if exists
+            $this->addHeaders($e->getHeaders());
+            throw new HttpRequestException($e->getMessage(), $e->getCode());
+        }
+
+        $partial = new Partial([
+            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
+            'fields' => $this->storage()->getFields(),
+        ]);
+
+        $sort = new Sort(['query' => $queryParams]);
+
+        $this->bodyData = $this->storage()->searchInstances([
+
+            // use filter by values
+            'filters' => $filter->getFilters(),
+
+            // columns
+            'fields' => $partial->getFields(),
+
+            // sort
+            'sortBy' => $sort->getSorting(),
+
+            // pagination
+            'offset' => $paginate->offset(),
+            'limit' => $paginate->length(),
+        ]);
+
+        $beforePaginationCount = count($this->storage()->searchInstances(['filters' => $filter->getFilters()]));
+
+        $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
+
+        if ($this->getStatusCode() == 200 && $paginate->getStatusCode()) {
+            $this->setStatusCode($paginate->getStatusCode());
+        }
+        
+        $this->addHeaders($paginate->getHeaders());
+    }
     
+    protected function getOne($partialFields = '')
+    {
+        
+        $partial = new Partial([
+            'query' => $partialFields,
+            'fields' => $this->storage()->getFields(),
+        ]);
+
+        $this->bodyData = $this->storage()->getOne($this->getResourceId(), $partial->getFields());
+    }
 }

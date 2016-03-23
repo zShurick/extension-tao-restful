@@ -32,6 +32,15 @@ interface DataStorageInterface
     public function getFields();
 
     /**
+     * One resource
+     *
+     * @param $id
+     * @param array $partialFields
+     * @return array
+     */
+    public function getOne($id, array $partialFields);
+    
+    /**
      * Search instances
      * 
      * @param array $params

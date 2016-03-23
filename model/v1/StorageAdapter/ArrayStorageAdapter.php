@@ -32,6 +32,20 @@ class ArrayStorageAdapter implements DataStorageInterface
     {
         return array_keys($this->searchInstances()[0]);
     }
+    
+    public function getOne($id, array $partialFields)
+    {
+        $resource = [];
+        foreach ($this->searchInstances() as $resource) {
+            if ($resource['id'] == $id) {
+                break;
+            }
+        }
+
+        $this->selectFields($resource, $partialFields);
+
+        return $resource;
+    }
 
     /**
      *
@@ -62,7 +76,7 @@ class ArrayStorageAdapter implements DataStorageInterface
         if (isset($params['filters']) && count($params['filters'])) {
             foreach ($data as $key => $row) {
                 foreach ($params['filters'] as $field => $filters) {
-                    if (in_array($row[$field], $filters)) {
+                    if (isset($row[$field]) && in_array($row[$field], $filters)) {
                         $filteredData[$key] = $row;
                     } else {
                         if (isset($filteredData[$key])) {
@@ -115,12 +129,8 @@ class ArrayStorageAdapter implements DataStorageInterface
         // fields
         if (isset($params['fields']) && count($params['fields'])) {
 
-            foreach ($data as $k => $row) {
-                foreach ($row as $key => $value) {
-                    if (!in_array($key, $params['fields'])) {
-                        unset($data[$k][$key]);
-                    }
-                }
+            foreach ($data as $k => &$row) {
+                $this->selectFields($row, $params['fields']);
             }
         }
 
@@ -137,5 +147,18 @@ class ArrayStorageAdapter implements DataStorageInterface
     public function save($key, array $resource)
     {
         $this->resourcesData[$key] = $resource;
+    }
+
+    /**
+     * @param $resource
+     * @param array $partialFields
+     */
+    private function selectFields(&$resource, array $partialFields)
+    {
+        foreach ($resource as $key => $value) {
+            if (!in_array($key, $partialFields)) {
+                unset($resource[$key]);
+            }
+        }
     }
 }

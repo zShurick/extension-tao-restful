@@ -19,33 +19,24 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
+namespace oat\taoRestAPI\helpers;
 
 
-use Request;
+use HTTPToolkit;
 
-
-class TaoRouterAdapter extends AbstractRouterAdapter
+class Response
 {
-    /**
-     * @var Request
-     */
-    protected $req;
-
-    public function __invoke(Request $req)
+    public static function write($status = 200, $contentType = '', array $headers = [], $body = '')
     {
-        $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
+        header(HTTPToolkit::statusCodeHeader($status));
+        header('Content-Type: ' . $contentType . '; charset=UTF-8', true);
 
-    protected function getList(array $params = null)
-    {
-        $queryParams = \tao_helpers_Uri::encodeArray($this->req->getParameters());
-        parent::getList($queryParams);
-    }
+        if (count($headers)) {
+            foreach ($headers as $name => $header) {
+                header(sprintf('%s: %s', $name, implode(';', $header)), true);
+            }
+        }
 
-    protected function getOne()
-    {
-        parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
+        echo $body;
     }
 }

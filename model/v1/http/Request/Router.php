@@ -33,12 +33,12 @@ abstract class Router implements HttpRouterInterface
 
     public function get()
     {
-        empty($this->resourceId)
-            ? $this->getList()
-            : $this->getOne();
+        $this->getResourceId()
+            ? $this->getOne()
+            : $this->getList(null);
     }
 
-    abstract protected function getList();
+    abstract protected function getList(array $params=null);
 
     abstract protected function getOne();
 

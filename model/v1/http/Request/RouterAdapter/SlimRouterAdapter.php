@@ -23,11 +23,7 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
-use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
-use oat\taoRestAPI\model\v1\http\filters\Filter;
-use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
-use oat\taoRestAPI\model\v1\http\filters\Sort;
 use Psr\Http\Message\ServerRequestInterface;
 
 class SlimRouterAdapter extends AbstractRouterAdapter
@@ -171,84 +167,16 @@ class SlimRouterAdapter extends AbstractRouterAdapter
     {
         $this->bodyData = parent::options();
     }
-
-    protected function getList()
+    
+    public function getList(array $params=null)
     {
         $queryParams = $this->req->getQueryParams();
-
-        $filter = new Filter([
-            'query' => $queryParams,
-            'fields' => array_keys($this->getResources()[0]),
-        ]);
-
-        try {
-            $paginate = new Paginate([
-                'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
-                'total' => count($this->getResources()),
-                'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
-            ]);
-        } catch (HttpRequestExceptionWithHeaders $e) {
-            // add failed headers if exists
-            $this->addHeaders($e->getHeaders());
-            throw new HttpRequestException($e->getMessage(), $e->getCode());
-        }
-
-        $partial = new Partial([
-            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->getResources()[0]),
-        ]);
-
-        $sort = new Sort(['query' => $queryParams]);
-
-        $this->bodyData = $this->storage()->searchInstances([
-
-            // use filter by values
-            'filters' => $filter->getFilters(),
-
-            // columns
-            'fields' => $partial->getFields(),
-
-            // sort
-            'sortBy' => $sort->getSorting(),
-
-            // pagination
-            'offset' => $paginate->offset(),
-            'limit' => $paginate->length(),
-        ]);
-
-        $beforePaginationCount = count($this->storage()->searchInstances(['filters' => $filter->getFilters()]));
-
-        $paginate->correctPaginationHeader(count($this->bodyData), $beforePaginationCount);
-
-        if ($this->getStatusCode() == 200 && $paginate->getStatusCode()) {
-            $this->setStatusCode($paginate->getStatusCode());
-        }
-        // success headers
-        $this->addHeaders($paginate->getHeaders());
+        parent::getList($queryParams);
     }
 
     protected function getOne()
     {
         $queryParams = $this->req->getQueryParams();
-
-        $resource = [];
-        foreach ($this->getResources() as $resource) {
-            if ($resource['id'] == $this->req->getAttribute('id')) {
-                break;
-            }
-        }
-
-        $partial = new Partial([
-            'query' => isset($queryParams['fields']) ? $queryParams['fields'] : '',
-            'fields' => array_keys($this->getResources()[0]),
-        ]);
-
-        foreach ($resource as $key => $value) {
-            if (!in_array($key, $partial->getFields())) {
-                unset($resource[$key]);
-            }
-        }
-
-        $this->bodyData = $resource;
+        parent::getOne(isset($queryParams['fields']) ? $queryParams['fields'] : '');
     }
 }

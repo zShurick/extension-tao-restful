@@ -22,7 +22,6 @@
 namespace oat\taoRestAPI\service\v1;
 
 
-use HTTPToolkit;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\AuthenticationInterface;
 use oat\taoRestAPI\model\DataEncoderInterface;
@@ -91,19 +90,5 @@ class RestApiService implements RestApiInterface
     {
         $this->encoder = $dataFormat->encoder();
         return $this;
-    }
-    
-    public static function writeResponse($status = 200, $contentType = '', array $headers = [], $body = '')
-    {
-        header(HTTPToolkit::statusCodeHeader($status));
-        header('Content-Type: ' . $contentType . '; charset=UTF-8', true);
-        
-        if (count($headers)) {
-            foreach ($headers as $name => $header) {
-                header(sprintf('%s: %s', $name, implode(';', $header)), true);
-            }
-        }
-        
-        echo $body;
     }
 }
