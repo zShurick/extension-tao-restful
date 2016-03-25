@@ -19,41 +19,50 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
+namespace oat\taoRestAPI\model;
 
 
-use Request;
-
-
-class TaoRouterAdapter extends AbstractRouterAdapter
+interface RouterAdapterInterface
 {
+
     /**
-     * @var Request
+     * Defined with data storage
+     * 
+     * RouterAdapterInterface constructor.
+     * @param DataStorageInterface $storage
      */
-    protected $req;
+    public function __construct(DataStorageInterface $storage);
 
-    public function __invoke(Request $req)
-    {
-        $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
+    /**
+     * Get data storage
+     * # income data
+     * 
+     * @return DataStorageInterface
+     */
+    public function storage();
 
-    protected function getList(array $params = null)
-    {
-        $queryParams = \tao_helpers_Uri::encodeArray($this->req->getParameters());
-        parent::getList($queryParams);
-    }
+    /**
+     * Get headers for http response
+     * #results
+     * 
+     * @return mixed
+     */
+    public function getHeaders();
 
-    protected function getOne()
-    {
-        parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
-    }
-    
-    protected function getResourceUrl($resource = null)
-    {
-    }
-    
-    protected function getParsedBody()
-    {
-    }
+    /**
+     * Get Status code of the Route operation
+     * #results
+     * 
+     * @return mixed
+     */
+    public function getStatusCode();
+
+    /**
+     * Data for answer
+     * #results
+     * 
+     * @return mixed
+     */
+    public function getBodyData();
+
 }

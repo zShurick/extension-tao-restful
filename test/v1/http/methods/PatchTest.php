@@ -114,6 +114,6 @@ class PatchTest extends RestApiUnitTestRunner
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
-        $this->assertEquals('{"errors":["Invalid Id"]}', (string)$this->response->getBody());
+        $this->assertEquals('{"errors":["You can not change id of the resource"]}', (string)$this->response->getBody());
     }
 }

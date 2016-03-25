@@ -36,7 +36,7 @@ class PaginateTest extends RestApiUnitTestRunner
             return $this->routerRunner($req, $res);
         });
 
-        $this->assertEquals('', (string)$this->response->getBody());
+        $this->assertEquals('[{"id":1,"title":"Potato","type":"vegetable","form":"circle","color":"brown"},{"id":2,"title":"Lemon","type":"citrus","form":"ellipse","color":"yellow"},{"id":3,"title":"Lime","type":"citrus","form":"ellipse","color":"green"},{"id":4,"title":"Carrot","type":"vegetable","form":"conical","color":"orange"},{"id":5,"title":"Orange","type":"citrus","form":"circle","color":"orange"}]', (string)$this->response->getBody());
         $this->assertEquals(200, $this->response->getStatusCode());
         $this->assertEquals('OK', $this->response->getReasonPhrase());
         $this->assertEquals(5, count($this->response->getResourceData()));

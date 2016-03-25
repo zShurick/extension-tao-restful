@@ -224,4 +224,12 @@ class HttpRoute extends AbstractRouterAdapter
     {
         echo 'one';
     }
+    
+    protected function getParsedBody()
+    {
+    }
+    
+    protected function getResourceUrl($resource = null)
+    {
+    }
 }

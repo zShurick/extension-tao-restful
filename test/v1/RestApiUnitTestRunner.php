@@ -24,6 +24,7 @@ namespace oat\taoRestAPI\test\v1;
 
 use oat\tao\test\TaoPhpUnitTestRunner;
 use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\model\v1\dataEncoder\JsonEncoder;
 use oat\taoRestAPI\test\v1\Mocks\DB;
 use oat\taoRestAPI\test\v1\Mocks\EnvironmentTrait;
 use oat\taoRestAPI\test\v1\Mocks\Response;
@@ -38,15 +39,15 @@ abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
 
     public function routerRunner(Request $req, Response &$res)
     {
-        $route = new TestHttpRoute($this->getStorage());
+        $route = $this->getRouter();
         try {
             $route($req);
 
             $res = $res->withStatus($route->getStatusCode());
-
+            $res->write((new JsonEncoder())->encode($route->getBodyData()));
+            
             // mock func for test
             $res->setResourceData($route->getBodyData());
-
         } catch (RestApiException $e) {
             $res = $res->withJson(['errors' => [$e->getMessage()]]);
             $res = $res->withStatus($e->getCode());
@@ -88,5 +89,13 @@ abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
                 $res = $res->withHeader($name, $header);
             }
         }
+    }
+
+    /**
+     * @return TestHttpRoute
+     */
+    protected function getRouter()
+    {
+        return new TestHttpRoute($this->getStorage());
     }
 }

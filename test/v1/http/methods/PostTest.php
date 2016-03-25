@@ -87,7 +87,7 @@ class PostTest extends RestApiUnitTestRunner
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
-        $this->assertEquals('{"errors":["Resource with id=1 exists."]}', (string)$this->response->getBody());
+        $this->assertEquals('{"errors":["Resource with id=1 already exists"]}', (string)$this->response->getBody());
         $this->assertFalse($this->response->hasHeader('Location'));
     }
 
@@ -105,9 +105,29 @@ class PostTest extends RestApiUnitTestRunner
 
     public function testHttpPostException()
     {
-        $this->request('POST', '/resources/{id}', '/resources/1', function ($req, $res, $args) {
-            return $this->routerRunner($req, $res, $args);
-        });
+        // replace default post to post with data
+        $_POST = [
+            'id' => 1,
+            'title' => 'beet',
+            'type' => 'vegetable',
+            'form' => 'ellipse',
+            'color' => 'brown',
+        ];
+
+        $env = Environment::mock([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_URI' => '/resources/1',
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_CONTENT_TYPE' => 'multipart/form-data;'
+        ]);
+
+        $this->request = Request::createFromEnvironment($env);
+        $this->request = $this->request->withAttribute('id', 1);
+        unset($_POST);
+
+        $this->response = new Response();
+
+        $this->routerRunner($this->request, $this->response);
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());

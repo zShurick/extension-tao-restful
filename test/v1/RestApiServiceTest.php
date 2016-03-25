@@ -27,7 +27,6 @@ use oat\taoRestAPI\model\v1\http\Request\DataFormat;
 use oat\taoRestAPI\service\v1\RestApiService;
 use oat\taoRestAPI\test\v1\Mocks\DB;
 use oat\taoRestAPI\test\v1\Mocks\FailedAuth;
-use oat\taoRestAPI\test\v1\Mocks\Response;
 use oat\taoRestAPI\test\v1\Mocks\TestHttpRoute;
 
 class RestApiServiceTest extends RestApiUnitTestRunner

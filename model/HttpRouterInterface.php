@@ -23,24 +23,24 @@ interface HttpRouterInterface
     /**
      * Create new record
      * Http POST
-     * 
-     * @return mixed new resource
+     *
+     * @return mixed Resource identifier
      */
     public function post();
 
     /**
      * Update full record (all data in record)
      * Http PUT
-     * 
-     * @return mixed updated resource
+     *
+     * @return mixed Resource identifier
      */
     public function put();
 
     /**
      * Change only specified data (not all record)
      * Http PATCH
-     * 
-     * @return mixed updated resource
+     *
+     * @return mixed resource identifier
      */
     public function patch();
 
@@ -82,4 +82,11 @@ interface HttpRouterInterface
      * @author Alexander Zagovorichev <zagovorichev@gmail.com>
      */
     public function options();
+
+    /**
+     * Storage
+     * 
+     * @return DataStorageInterface
+     */
+    public function storage();
 }

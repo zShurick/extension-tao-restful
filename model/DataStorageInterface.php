@@ -49,15 +49,39 @@ interface DataStorageInterface
     public function searchInstances(array $params = null);
 
     /**
-     * @param $key
-     * @return string resource identifier
+     * @param array $propertiesValues
+     * @return array
      */
-    public function delete($key);
+    public function create(array $propertiesValues);
 
     /**
-     * @param $key
-     * @param array $resource
+     * Replace all resource data
+     * @param $id
+     * @param array $propertiesValues
+     * @return mixed
+     */
+    public function put($id, array $propertiesValues);
+
+    /**
+     * Update only pointed fields
+     * 
+     * @param $id
+     * @param array $propertiesValues
+     * @return mixed
+     */
+    public function patch($id, array $propertiesValues);
+
+    /**
+     * @param $id
      * @return string resource identifier
      */
-    public function save($key, array $resource);
+    public function delete($id);
+    
+    /**
+     * Is resource with identifier exists
+     * 
+     * @param $id
+     * @return mixed
+     */
+    public function exists($id);
 }

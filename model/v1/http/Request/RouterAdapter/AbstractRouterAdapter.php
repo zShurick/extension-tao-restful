@@ -25,13 +25,14 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
 use oat\taoRestAPI\model\DataStorageInterface;
+use oat\taoRestAPI\model\RouterAdapterInterface;
 use oat\taoRestAPI\model\v1\http\filters\Filter;
 use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\Router;
 
-abstract class AbstractRouterAdapter extends Router
+abstract class AbstractRouterAdapter extends Router implements RouterAdapterInterface
 {
     /**
      * @var DataStorageInterface
@@ -161,5 +162,79 @@ abstract class AbstractRouterAdapter extends Router
         ]);
 
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $partial->getFields());
+    }
+    
+    public function post()
+    {
+        parent::post();
+        
+        $id = $this->storage()->create($this->getResourceData());
+        
+        // return new resource
+        $this->bodyData = $this->storage()->getOne($id, $this->storage()->getFields());
+        $this->setStatusCode(201);
+        $this->addHeaders(['Location' => $this->getResourceUrl($id)]);
+    }
+
+    public function put()
+    {
+        parent::put();
+        
+        $this->storage()->put($this->getResourceId(), $this->getResourceData());
+        
+        $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
+    }
+
+    public function patch()
+    {
+        parent::patch();
+        
+        $this->storage()->patch($this->getResourceId(), $this->getResourceData());
+
+        $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
+    }
+    
+    public function delete()
+    {
+        parent::delete();
+        
+        $this->storage()->delete($this->getResourceId());
+    }
+
+    public function options()
+    {
+        $this->bodyData = parent::options();
+    }
+
+    /**
+     * Get parsed request body (for put, patch, post requests)
+     * for validation can be used $this->getResourceData
+     * 
+     * @return mixed
+     */
+    abstract protected function getParsedBody();
+
+    /**
+     * Resource address
+     *
+     * @param null $resource
+     * @return string
+     */
+    abstract protected function getResourceUrl($resource = null);
+
+    /**
+     * Get requested data with validation
+     * @return mixed
+     * @throws HttpRequestException
+     */
+    private function getResourceData()
+    {
+        $resourceData = $this->getParsedBody();
+
+        if (!$resourceData) {
+            throw new HttpRequestException('Empty Request data.', 400);
+        }
+
+        return $resourceData;
     }
 }

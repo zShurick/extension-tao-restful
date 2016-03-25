@@ -23,13 +23,13 @@ namespace oat\taoRestAPI\model\v1\StorageAdapter;
 
 
 use common_Utils;
+use core_kernel_classes_Class;
 use core_kernel_classes_Resource;
 use core_kernel_classes_ResourceFormatter;
 use oat\taoRestAPI\exception\RestApiException;
-use oat\taoRestAPI\model\DataStorageInterface;
 use tao_models_classes_ClassService;
 
-class RdfStorageAdapter implements DataStorageInterface
+class RdfStorageAdapter extends AbstractStorageAdapter
 {
 
     /**
@@ -59,7 +59,7 @@ class RdfStorageAdapter implements DataStorageInterface
         if (!count($this->fields)) {
             $resources = $this->searchInstances(['limit' => 1]);
             if (count($resources)) {
-                $resource = new \core_kernel_classes_Resource($resources[0]->uri);
+                $resource = new core_kernel_classes_Resource($resources[0]->uri);
 
                 $types = $resource->getTypes();
                 $properties = [];
@@ -80,6 +80,8 @@ class RdfStorageAdapter implements DataStorageInterface
     public function searchInstances(array $params = null)
     {
         $searchPropertyFilters = [];
+        $searchOptions = ['like' => false];
+        
         $result = [];
 
         // filters
@@ -87,37 +89,124 @@ class RdfStorageAdapter implements DataStorageInterface
         if (isset($params['filters']) && count($params['filters'])) {
             $searchPropertyFilters = array_merge($searchPropertyFilters, $params['filters']);
         }
-        
-        $resources = $this->service->getRootClass()->searchInstances($searchPropertyFilters);
+
+        // sort in rdf can be only by 1 field
+        if (isset($params['sortBy']) && count($params['sortBy'])) {
+            $sortBy = '';
+            $sortDirection = 'ASC';
+            
+            if (isset($params['sortBy']['sort']) && count($params['sortBy']['sort'])) {
+                foreach ($params['sortBy']['sort'] as $field) {
+                    if (in_array($field, $this->getFields())) {
+                        $sortBy = $field;
+                        break;
+                    }
+                }
+            }
+            
+            if (!empty($sortBy) && isset($params['sortBy']['desc']) && in_array($sortBy, $params['sortBy']['desc'])) {
+                $sortDirection = 'DESC';
+            }
+            
+            $searchOptions = array_merge($searchOptions, ['order' => $sortBy, 'orderdir' => $sortDirection]);
+        }
+
+        // pagination
+        if (isset($params['offset']) && isset($params['limit'])) {
+            $searchOptions = array_merge($searchOptions, ['offset' => $params['offset'], 'limit' => $params['limit']]);
+        }
+
+        $resources = $this->service->getRootClass()->searchInstances($searchPropertyFilters, $searchOptions);
+
         foreach ($resources as $resource) {
-            $result[] = $this->formatter->getResourceDescription($resource, false);
+            $row = $this->formatter->getResourceDescription($resource, false);
+            if (isset($params['fields']) && count($params['fields'])) {
+                $row = $this->getPartial($row, $params['fields']);
+            }
+            $result[] = $row;
         }
         return $result;
     }
-    
-    public function save($key, array $resource)
+
+    public function create(array $propertiesValues)
     {
-        // TODO: Implement save() method.
-    }
-    
-    public function delete($key)
-    {
-        // TODO: Implement delete() method.
-    }
-    
-    public function getOne($uri, array $partialFields)
-    {
-        if (!common_Utils::isUri($uri)) {
-            throw new RestApiException('Undefined identifier', 400);
+        if (!isset($propertiesValues[RDFS_LABEL])) {
+            $propertiesValues[RDFS_LABEL] = "";
         }
+
+        $type = isset($propertiesValues[RDF_TYPE]) ? $propertiesValues[RDF_TYPE] : null;
+        $label = $propertiesValues[RDFS_LABEL];
+        unset($propertiesValues[RDFS_LABEL]);
+        unset($propertiesValues[RDF_TYPE]);
+
+        $type = (isset($type)) ? new core_kernel_classes_Class($type) : $this->service->getRootClass();
+
+        if ($type->getUri() != $this->service->getRootClass()->getUri()) {
+            throw new RestApiException(__('Incorrect type of the resource'), 400);
+        }
+
+        $resource = $this->service->createInstance($type, $label);
+        $resource->setPropertiesValues($propertiesValues);
+
+        return $resource->getUri();
+    }
+
+    public function put($uri, array $propertiesValues)
+    {
+        parent::put($uri, $propertiesValues);
         
         $resource = new core_kernel_classes_Resource($uri);
-        if (!$resource->hasType($this->service->getRootClass())) {
-            throw new RestApiException('Incorrect identifier type', 400);
-        }
+        // delete all properties of the resource
+        $this->delete($uri);
+        
+        // add new properties from propertiesValues
+        $resource->setPropertiesValues($propertiesValues);
+    }
 
+    public function patch($uri, array $propertiesValues)
+    {
+        parent::patch($uri, $propertiesValues);
+        
+        $resource = new core_kernel_classes_Resource($uri);
+
+        foreach ($propertiesValues as $property => $value) {
+            $resource->editPropertyValues(new \core_kernel_classes_Property($property), $value);
+        }
+    }
+    
+    public function delete($uri)
+    {
+        if ($this->exists($uri)) {
+        
+            if (!common_Utils::isUri($uri)) {
+                throw new RestApiException(__('Undefined identifier'), 400);
+            }
+    
+            $resource = new core_kernel_classes_Resource($uri);
+            
+            if (!$resource->hasType($this->service->getRootClass())) {
+                throw new RestApiException(__('Incorrect identifier type'), 400);
+            }
+            
+            $resource->delete();
+        }
+        
+    }
+
+    public function getOne($uri, array $partialFields)
+    {
+        $resource = $this->getResource($uri);
         $result =  $this->formatter->getResourceDescription($resource, false);
 
+        if (count($partialFields)){
+            $result = $this->getPartial($result, $partialFields);
+        }
+        
+        return $result;
+    }
+
+    private function getPartial($result, array $partialFields)
+    {
         foreach ($result->properties as $key => $property) {
             if (!in_array($property->predicateUri, $partialFields)) {
                 unset($result->properties[$key]);
@@ -126,5 +215,27 @@ class RdfStorageAdapter implements DataStorageInterface
         
         return $result;
     }
+
+    /**
+     * @param $uri
+     * @return core_kernel_classes_Resource
+     * @throws RestApiException
+     */
+    protected function getResource($uri)
+    {
+        if (!common_Utils::isUri($uri)) {
+            throw new RestApiException(__('Undefined identifier'), 404);
+        }
+
+        $resource = new core_kernel_classes_Resource($uri);
+        if (!$resource->hasType($this->service->getRootClass())) {
+            throw new RestApiException(__('Incorrect identifier type'), 400);
+        }
+        return $resource;
+    }
     
+    public function exists($uri)
+    {
+        return $this->getResource($uri)->exists();
+    }
 }

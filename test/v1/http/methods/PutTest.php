@@ -114,6 +114,7 @@ class PutTest extends RestApiUnitTestRunner
         $this->request = $this->request->withParsedBody($putData);
         $this->request = $this->request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
         $this->response = new Response();
+        
         $this->routerRunner($this->request, $this->response);
 
         $this->assertEquals(400, $this->response->getStatusCode());

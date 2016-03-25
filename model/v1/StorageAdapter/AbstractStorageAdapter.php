@@ -19,41 +19,34 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
+namespace oat\taoRestAPI\model\v1\StorageAdapter;
 
 
-use Request;
+use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\model\DataStorageInterface;
 
-
-class TaoRouterAdapter extends AbstractRouterAdapter
+abstract class AbstractStorageAdapter implements DataStorageInterface
 {
+    public function put($id, array $propertiesValues)
+    {
+        $this->throwIfResourceNotExists($id);
+    }
+    
+    public function patch($id, array $propertiesValues)
+    {
+        $this->throwIfResourceNotExists($id);
+    }
+    
+    abstract public function exists($id);
+    
     /**
-     * @var Request
+     * @param $id
+     * @throws RestApiException
      */
-    protected $req;
-
-    public function __invoke(Request $req)
+    private function throwIfResourceNotExists($id)
     {
-        $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
-
-    protected function getList(array $params = null)
-    {
-        $queryParams = \tao_helpers_Uri::encodeArray($this->req->getParameters());
-        parent::getList($queryParams);
-    }
-
-    protected function getOne()
-    {
-        parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
-    }
-    
-    protected function getResourceUrl($resource = null)
-    {
-    }
-    
-    protected function getParsedBody()
-    {
+        if (!$this->exists($id)) {
+            throw new RestApiException(__('Resource not found'), 404);
+        }
     }
 }

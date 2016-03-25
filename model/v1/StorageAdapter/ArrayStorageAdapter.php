@@ -22,6 +22,7 @@
 namespace oat\taoRestAPI\model\v1\StorageAdapter;
 
 
+use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\DataStorageInterface;
 
 class ArrayStorageAdapter implements DataStorageInterface
@@ -137,16 +138,64 @@ class ArrayStorageAdapter implements DataStorageInterface
         return $data;
     }
 
-    public function delete($key)
+    public function create(array $propertiesValues)
     {
-        if (isset($this->resourcesData[$key])) {
+        if (!isset($propertiesValues['id'])) {
+            throw new RestApiException(__('Resource parameter "id" is required'), 400);
+        }
+        
+        if ($this->exists($propertiesValues['id'])) {
+            throw new RestApiException(__('Resource with id=%s already exists', $propertiesValues['id']), 400);
+        }
+        
+        //creating
+        $this->resourcesData[] = $propertiesValues;
+        
+        return current(array_slice($this->resourcesData, -1, 1))['id'];
+    }
+
+    // replace all data
+    public function put($id, array $propertiesValues)
+    {
+        if (!isset($propertiesValues['id']) || $id != $propertiesValues['id']) {
+            throw new RestApiException(__('You can not change id of the resource'), 400);
+        }
+        
+        $this->resourcesData[$this->findIdKey($id)] = $propertiesValues;
+    }
+
+    // change only properties
+    public function patch($id, array $propertiesValues)
+    {
+        
+        if (isset($propertiesValues['id']) && $id != $propertiesValues['id']) {
+            throw new RestApiException(__('You can not change id of the resource'), 400);
+        }
+        
+        $key = $this->findIdKey($id);
+        foreach ($propertiesValues as $pKey => $propertyValue) {
+            $this->resourcesData[$key][$pKey] = $propertyValue;
+        }
+    }
+    
+    public function delete($id)
+    {
+        if ($key = $this->findIdKey($id) !== false) {
             unset($this->resourcesData[$key]);
         }
     }
-
-    public function save($key, array $resource)
+    
+    public function exists($id)
     {
-        $this->resourcesData[$key] = $resource;
+        $ids = [];
+        foreach ($this->searchInstances() as $row) {
+            $ids[] = $row['id'];
+        }
+        if (in_array($id, $ids)) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -160,5 +209,16 @@ class ArrayStorageAdapter implements DataStorageInterface
                 unset($resource[$key]);
             }
         }
+    }
+    
+    private function findIdKey($id)
+    {
+        foreach ($this->searchInstances() as $key => $resource) {
+            if ($resource['id'] == $id) {
+                return $key;
+            }
+        }
+        
+        return false;
     }
 }

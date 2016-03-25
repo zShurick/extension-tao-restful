@@ -19,41 +19,23 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
+namespace oat\taoRestAPI\test\TaoRdfData\samples;
 
 
-use Request;
+use tao_actions_form_Generis;
+use tao_models_classes_ClassService;
 
-
-class TaoRouterAdapter extends AbstractRouterAdapter
+class RdfService extends tao_models_classes_ClassService
 {
-    /**
-     * @var Request
-     */
-    protected $req;
-
-    public function __invoke(Request $req)
-    {
-        $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
-
-    protected function getList(array $params = null)
-    {
-        $queryParams = \tao_helpers_Uri::encodeArray($this->req->getParameters());
-        parent::getList($queryParams);
-    }
-
-    protected function getOne()
-    {
-        parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
+    private $rdfClass;
+    
+    public function __construct(){
+        parent::__construct();
+        $this->rdfClass = new \core_kernel_classes_Class(tao_actions_form_Generis::DEFAULT_TOP_CLASS);
     }
     
-    protected function getResourceUrl($resource = null)
+    public function getRootClass()
     {
-    }
-    
-    protected function getParsedBody()
-    {
+        return $this->rdfClass;
     }
 }

@@ -23,7 +23,7 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
-use oat\taoRestAPI\model\v1\http\filters\Partial;
+use oat\taoRestAPI\exception\RestApiException;
 use Psr\Http\Message\ServerRequestInterface;
 
 class SlimRouterAdapter extends AbstractRouterAdapter
@@ -49,124 +49,6 @@ class SlimRouterAdapter extends AbstractRouterAdapter
         $this->req = $req;
         $this->runApiCommand($this->req->getMethod(), $this->req->getAttribute('id'));
     }
-
-    /**
-     * For phpunit testing data changing (put, post, delete, patch)
-     *
-     * @return array
-     */
-    public function getResources()
-    {
-        return $this->storage()->searchInstances();
-    }
-
-    /**
-     * Create new resource
-     *
-     * @throws HttpRequestException
-     */
-    public function post()
-    {
-        parent::post();
-
-        $resource = $this->req->getParsedBody();
-        // without data
-        if (!$resource) {
-            throw new HttpRequestException('Empty Request data.', 400);
-        }
-        // data validation
-        $ids = [];
-        foreach ($this->getResources() as $row) {
-            $ids[] = $row['id'];
-        }
-        if (in_array($resource['id'], $ids)) {
-            throw new HttpRequestException('Resource with id=' . $resource['id'] . ' exists.', 400);
-        }
-
-        //creating
-        $this->getResources()[] = $resource;
-
-        $this->setStatusCode(201);
-        $this->addHeaders(['Location' => (string)$this->req->getUri() . '/' . $resource['id']]);
-    }
-
-    public function put()
-    {
-        parent::put();
-
-        $resource = $this->req->getParsedBody();
-
-        // without data
-        if (!$resource) {
-            throw new HttpRequestException('Empty Request data.', 400);
-        }
-        if (!isset($resource['id'])) {
-            throw new HttpRequestException('Id is required', 400);
-        }
-
-        // data validation
-        $ids = [];
-        foreach ($this->getResources() as $key => $row) {
-            $ids[$key] = $row['id'];
-        }
-        if (!in_array($this->getResourceId(), $ids)) {
-            throw new HttpRequestException('Resource with id=' . $this->getResourceId() . ' not exists.', 400);
-        }
-
-        //replace
-        $this->storage()->save(array_search($this->getResourceId(), $ids), $resource);
-    }
-
-    public function patch()
-    {
-        parent::patch();
-
-        $resource = $this->req->getParsedBody();
-
-        // without data
-        if (!$resource) {
-            throw new HttpRequestException('Empty Request data.', 400);
-        }
-        // data validation
-        if (isset($resource['id']) && $resource['id'] !== $this->getResourceId()) {
-            throw new HttpRequestException('Invalid Id', 400);
-        }
-
-        $ids = [];
-        foreach ($this->getResources() as $key => $row) {
-            $ids[$key] = $row['id'];
-        }
-        if (!in_array($this->getResourceId(), $ids)) {
-            throw new HttpRequestException('Resource with id=' . $this->getResourceId() . ' not exists.', 400);
-        }
-
-        $resourceKey = array_search($this->getResourceId(), $ids);
-        $updResource = $this->getResources()[$resourceKey];
-        foreach ($resource as $key => $value) {
-            $updResource[$key] = $value;
-        }
-
-        $this->storage()->save($resourceKey, $updResource);
-    }
-
-    public function delete()
-    {
-        parent::delete();
-
-        $ids = [];
-        foreach ($this->getResources() as $key => $row) {
-            $ids[$key] = $row['id'];
-        }
-        if (in_array($this->getResourceId(), $ids)) {
-            $this->storage()->delete(array_search($this->getResourceId(), $ids));
-        }
-
-    }
-
-    public function options()
-    {
-        $this->bodyData = parent::options();
-    }
     
     public function getList(array $params=null)
     {
@@ -178,5 +60,23 @@ class SlimRouterAdapter extends AbstractRouterAdapter
     {
         $queryParams = $this->req->getQueryParams();
         parent::getOne(isset($queryParams['fields']) ? $queryParams['fields'] : '');
+    }
+    
+    protected function getResourceUrl($id=null)
+    {
+        if ($id && $this->storage()->exists($id)) {
+            // use id
+        } elseif ($this->getResourceId() && $this->storage()->exists($this->getResourceId())) {
+            $id = $this->getResourceId();
+        } else {
+            throw new RestApiException('Undefined resource identifier', 400);
+        }
+        
+        return (string)$this->req->getUri() . '/' . $id;
+    }
+    
+    protected function getParsedBody()
+    {
+        return $this->req->getParsedBody();
     }
 }
