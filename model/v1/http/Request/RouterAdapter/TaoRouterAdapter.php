@@ -40,7 +40,7 @@ class TaoRouterAdapter extends AbstractRouterAdapter
 
     protected function getList(array $params = null)
     {
-        $queryParams = \tao_helpers_Uri::encodeArray($this->req->getParameters());
+        $queryParams = $this->req->getParameters();
         parent::getList($queryParams);
     }
 
@@ -49,11 +49,13 @@ class TaoRouterAdapter extends AbstractRouterAdapter
         parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
     }
     
-    protected function getResourceUrl($resource = null)
+    protected function getResourceUrl($uri = null)
     {
+        return \tao_helpers_Uri::getPath('?uri=' . parent::getResourceUrl($uri));
     }
     
     protected function getParsedBody()
     {
+        // todo in here post, put, patch parameters
     }
 }

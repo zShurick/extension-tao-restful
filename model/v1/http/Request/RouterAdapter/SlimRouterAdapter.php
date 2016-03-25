@@ -64,15 +64,7 @@ class SlimRouterAdapter extends AbstractRouterAdapter
     
     protected function getResourceUrl($id=null)
     {
-        if ($id && $this->storage()->exists($id)) {
-            // use id
-        } elseif ($this->getResourceId() && $this->storage()->exists($this->getResourceId())) {
-            $id = $this->getResourceId();
-        } else {
-            throw new RestApiException('Undefined resource identifier', 400);
-        }
-        
-        return (string)$this->req->getUri() . '/' . $id;
+        return (string)$this->req->getUri() . '/' . parent::getResourceUrl($id);
     }
     
     protected function getParsedBody()

@@ -24,6 +24,7 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\exception\HttpRequestExceptionWithHeaders;
+use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\DataStorageInterface;
 use oat\taoRestAPI\model\RouterAdapterInterface;
 use oat\taoRestAPI\model\v1\http\filters\Filter;
@@ -217,10 +218,22 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     /**
      * Resource address
      *
-     * @param null $resource
-     * @return string
+     * @param null $id
+     * @return mixed|null
+     * @throws RestApiException
      */
-    abstract protected function getResourceUrl($resource = null);
+    protected function getResourceUrl($id = null) 
+    {
+        if ($id && $this->storage()->exists($id)) {
+            // use id
+        } elseif ($this->getResourceId() && $this->storage()->exists($this->getResourceId())) {
+            $id = $this->getResourceId();
+        } else {
+            throw new RestApiException('Undefined resource identifier', 400);
+        }
+        
+        return $id;
+    }
 
     /**
      * Get requested data with validation
