@@ -47,6 +47,16 @@ class RdfStorageAdapter extends AbstractStorageAdapter
      * @var array
      */
     private $fields = [];
+
+    /**
+     * Default properties for each RDF elements
+     * @var array
+     */
+    private $defaultProperties = [
+        RDFS_LABEL => '',
+        RDFS_COMMENT => '',
+        RDF_TYPE => null,
+    ];
     
     public function __construct(tao_models_classes_ClassService $service)
     {
@@ -128,26 +138,26 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         return $result;
     }
 
+    protected function getDefaultProperties()
+    {
+        return $this->defaultProperties;
+    }
+    
     public function create(array $propertiesValues)
     {
-        if (!isset($propertiesValues[RDFS_LABEL])) {
-            $propertiesValues[RDFS_LABEL] = "";
-        }
-
-        $type = isset($propertiesValues[RDF_TYPE]) ? $propertiesValues[RDF_TYPE] : null;
-        $label = $propertiesValues[RDFS_LABEL];
+        $propertiesValues = array_merge($this->getDefaultProperties(), $propertiesValues);
+        
+        $type = isset($propertiesValues[RDF_TYPE]) ? new core_kernel_classes_Class($propertiesValues[RDF_TYPE]) : $this->service->getRootClass();
+        $label = isset($propertiesValues[RDFS_LABEL]) ? $propertiesValues[RDFS_LABEL] : '';
         unset($propertiesValues[RDFS_LABEL]);
         unset($propertiesValues[RDF_TYPE]);
-
-        $type = (isset($type)) ? new core_kernel_classes_Class($type) : $this->service->getRootClass();
 
         if ($type->getUri() != $this->service->getRootClass()->getUri()) {
             throw new RestApiException(__('Incorrect type of the resource'), 400);
         }
-
+        
         $resource = $this->service->createInstance($type, $label);
         $resource->setPropertiesValues($propertiesValues);
-
         return $resource->getUri();
     }
 
@@ -183,7 +193,7 @@ class RdfStorageAdapter extends AbstractStorageAdapter
             }
     
             $resource = new core_kernel_classes_Resource($uri);
-            
+
             if (!$resource->hasType($this->service->getRootClass())) {
                 throw new RestApiException(__('Incorrect identifier type'), 400);
             }
@@ -228,8 +238,9 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         }
 
         $resource = new core_kernel_classes_Resource($uri);
+        
         if (!$resource->hasType($this->service->getRootClass())) {
-            throw new RestApiException(__('Incorrect identifier type'), 400);
+            throw new RestApiException(__('Incorrect identifier type ' . $this->service->getRootClass()->getUri()), 400);
         }
         return $resource;
     }

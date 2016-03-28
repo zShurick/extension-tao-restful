@@ -214,7 +214,21 @@ class HttpRoute extends AbstractRouterAdapter
         $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
     }
 
-    protected function getList(array $params = null)
+    protected $params = null;
+    
+    protected function getQueryParams()
+    {
+        if (!isset($this->params)){
+            $this->params = [];
+            foreach ($this->req->getQueryParams() as $key => $param) {
+                $this->params[urlencode($key)] = urlencode($param);
+            }
+        }
+
+        return $this->params;
+    }
+
+    protected function getList()
     {
         $queryParams = $this->req->getParameters();
         parent::getList($queryParams);

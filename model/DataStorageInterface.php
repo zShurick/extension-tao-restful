@@ -84,4 +84,12 @@ interface DataStorageInterface
      * @return mixed
      */
     public function exists($id);
+
+    /**
+     * Flag - if storage can create new resources with default values
+     * (i.e. we can send post request without any post data, and as result we'll have resource with default fields)
+     *
+     * @return bool
+     */
+    public function isAllowedDefaultResources();
 }

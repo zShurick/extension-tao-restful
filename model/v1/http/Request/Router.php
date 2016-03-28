@@ -35,10 +35,10 @@ abstract class Router implements HttpRouterInterface
     {
         $this->getResourceId()
             ? $this->getOne()
-            : $this->getList(null);
+            : $this->getList();
     }
 
-    abstract protected function getList(array $params=null);
+    abstract protected function getList();
 
     abstract protected function getOne();
 

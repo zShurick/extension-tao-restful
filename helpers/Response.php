@@ -33,7 +33,12 @@ class Response
 
         if (count($headers)) {
             foreach ($headers as $name => $header) {
-                header(sprintf('%s: %s', $name, implode(';', $header)), true);
+                
+                if (is_array($header)) {
+                    $header = implode(';', $header);
+                }
+                
+                header(sprintf('%s: %s', $name, $header), true);
             }
         }
 

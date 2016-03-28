@@ -23,7 +23,6 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
 use oat\taoRestAPI\exception\HttpRequestException;
-use oat\taoRestAPI\exception\RestApiException;
 use Psr\Http\Message\ServerRequestInterface;
 
 class SlimRouterAdapter extends AbstractRouterAdapter
@@ -47,19 +46,24 @@ class SlimRouterAdapter extends AbstractRouterAdapter
     public function __invoke(ServerRequestInterface $req = null)
     {
         $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getAttribute('id'));
+        $id = $this->req->getAttribute('id');
+        $id = isset($id) ? urldecode($id) : null;
+        $this->runApiCommand($this->req->getMethod(), $id);
     }
     
-    public function getList(array $params=null)
+    /**
+     * Get params from Get request
+     */
+    protected function getQueryParams()
     {
-        $queryParams = $this->req->getQueryParams();
-        parent::getList($queryParams);
-    }
-
-    protected function getOne()
-    {
-        $queryParams = $this->req->getQueryParams();
-        parent::getOne(isset($queryParams['fields']) ? $queryParams['fields'] : '');
+        if (!isset($this->queryParams)){
+            $this->queryParams = [];
+            foreach ($this->req->getQueryParams() as $key => $param) {
+                $this->queryParams[urldecode($key)] = urldecode($param);
+            }
+        }
+        
+        return $this->queryParams;
     }
     
     protected function getResourceUrl($id=null)

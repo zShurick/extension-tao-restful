@@ -171,7 +171,11 @@ class RestApiServiceTest extends RestApiUnitTestRunner
 
     public function testGetListFilters()
     {
-        $this->request('GET', '/resources', '/resources?http://www.w3.org/1999/02/22-rdf-syntax-ns#type=http://www.tao.lu/Ontologies/TAO.rdf#TAOObject&http://www.w3.org/2000/01/rdf-schema#label=PHPUNIT_Resource_1', function (Request $req, Response $res) {
+        $this->request('GET', '/resources', '/resources?'
+                . urlencode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type') 
+                    . '=' . urlencode('http://www.tao.lu/Ontologies/TAO.rdf#TAOObject').
+                '&' . urlencode('http://www.w3.org/2000/01/rdf-schema#label') . '=' . urlencode('PHPUNIT_Resource_1')
+            , function (Request $req, Response $res) {
 
             try {
                 $this->service
@@ -392,7 +396,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
     {
         $env = Environment::mock([
             'SCRIPT_NAME' => '/index.php',
-            'REQUEST_URI' => '/resources?id=' . $resourceUri,
+            'REQUEST_URI' => '/resources?id=' .urlencode($resourceUri),
             'REQUEST_METHOD' => 'PUT',
         ]);
 
@@ -400,7 +404,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
         unset($_POST);
 
         // add Attribute in request
-        $request = $request->withAttribute('id', $resourceUri);
+        $request = $request->withAttribute('id', urlencode($resourceUri));
         $putData = [
             RDF_TYPE => tao_actions_form_Generis::DEFAULT_TOP_CLASS, // should be default for rdf storage
             RDFS_LABEL => 'PHPUNIT_Resource_2020',

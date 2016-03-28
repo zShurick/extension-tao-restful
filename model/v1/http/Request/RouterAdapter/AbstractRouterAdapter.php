@@ -58,6 +58,11 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      */
     private $httpHeaders = [];
 
+    /**
+     * @var array of the query parameters
+     */
+    protected $queryParams = null;
+
     public function __construct(DataStorageInterface $storage)
     {
         $this->storage = $storage;
@@ -100,8 +105,14 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         $this->httpStatusCode = intval($status);
     }
 
-    protected function getList(array $queryParams=null)
+    /**
+     * @return array of the requests params
+     */
+    abstract protected function getQueryParams();
+    
+    protected function getList()
     {
+        $queryParams = $this->getQueryParams();
         
         $filter = new Filter([
             'query' => $queryParams,
@@ -112,7 +123,8 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
             $paginate = new Paginate([
                 'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
                 'total' => count($this->storage()->searchInstances()),
-                'paginationUrl' => 'http://api.taotest.example/v1/items?range=',
+                // todo pagination url
+                'paginationUrl' => '?range=',
             ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
             // add failed headers if exists
@@ -154,8 +166,10 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         $this->addHeaders($paginate->getHeaders());
     }
     
-    protected function getOne($partialFields = '')
+    protected function getOne()
     {
+        $queryParams = $this->getQueryParams();
+        $partialFields = isset($queryParams['fields']) ? $queryParams['fields'] : '';
         
         $partial = new Partial([
             'query' => $partialFields,
@@ -169,7 +183,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     {
         parent::post();
         
-        $id = $this->storage()->create($this->getResourceData());
+        $id = $this->storage()->create($this->getResourceData(false));
         
         // return new resource
         $this->bodyData = $this->storage()->getOne($id, $this->storage()->getFields());
@@ -181,7 +195,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     {
         parent::put();
         
-        $this->storage()->put($this->getResourceId(), $this->getResourceData());
+        $this->storage()->put($this->getResourceId(), $this->getResourceData(true));
         
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
     }
@@ -190,7 +204,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     {
         parent::patch();
         
-        $this->storage()->patch($this->getResourceId(), $this->getResourceData());
+        $this->storage()->patch($this->getResourceId(), $this->getResourceData(true));
 
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
     }
@@ -240,11 +254,11 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      * @return mixed
      * @throws HttpRequestException
      */
-    private function getResourceData()
+    private function getResourceData($required = true)
     {
         $resourceData = $this->getParsedBody();
 
-        if (!$resourceData) {
+        if ($required && !$this->storage()->isAllowedDefaultResources() && !$resourceData) {
             throw new HttpRequestException('Empty Request data.', 400);
         }
 

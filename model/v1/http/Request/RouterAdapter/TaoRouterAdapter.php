@@ -24,7 +24,6 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 use Request;
 
-
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
     /**
@@ -35,27 +34,33 @@ class TaoRouterAdapter extends AbstractRouterAdapter
     public function __invoke(Request $req)
     {
         $this->req = $req;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
+        $queryParams = $this->getQueryParams();
+        $uri = isset($queryParams['uri']) ? $queryParams['uri'] : null;
+        $this->runApiCommand($this->req->getMethod(), $uri);
     }
 
-    protected function getList(array $params = null)
-    {
-        $queryParams = $this->req->getParameters();
-        parent::getList($queryParams);
-    }
-
-    protected function getOne()
-    {
-        parent::getOne( $this->req->hasParameter('fields') ? $this->req->getParameter('fields') : '' );
-    }
-    
     protected function getResourceUrl($uri = null)
     {
         return \tao_helpers_Uri::getPath('?uri=' . parent::getResourceUrl($uri));
     }
-    
+
+    /**
+     * Get params from Get request
+     */
+    protected function getQueryParams()
+    {
+        if (!isset($this->queryParams)){
+            $this->queryParams = [];
+            foreach ($_GET as $key => $param) {
+                $this->queryParams[urldecode($key)] = urldecode($param);
+            }
+        }
+
+        return $this->queryParams;
+    }
+
     protected function getParsedBody()
     {
-        // todo in here post, put, patch parameters
+        return $this->req->getParameters();
     }
 }

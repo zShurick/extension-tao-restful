@@ -27,6 +27,19 @@ use oat\taoRestAPI\model\DataStorageInterface;
 
 abstract class AbstractStorageAdapter implements DataStorageInterface
 {
+
+    /**
+     * Flag - if storage can create new resources with default values
+     * (i.e. we can send post request without any post data, and as result we'll have resource with default fields)
+     * 
+     * @var bool
+     */
+    protected $allowedDefaultResources = false;
+    
+    public function isAllowedDefaultResources() {
+        return $this->allowedDefaultResources;
+    }
+    
     public function put($id, array $propertiesValues)
     {
         $this->throwIfResourceNotExists($id);
