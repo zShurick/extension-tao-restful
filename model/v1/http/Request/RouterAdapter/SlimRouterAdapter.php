@@ -22,34 +22,8 @@
 namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
-use oat\taoRestAPI\exception\HttpRequestException;
-use Psr\Http\Message\ServerRequestInterface;
-
 class SlimRouterAdapter extends AbstractRouterAdapter
 {
-
-    /**
-     * @var ServerRequestInterface
-     */
-    protected $req;
-
-    /**
-     * Rest API auto runner
-     *
-     * # Defines and runs the necessary methods for current Http header _method
-     *
-     * ## for dev test with slim, can compile http responses with correct status codes
-     *
-     * @param ServerRequestInterface $req
-     * @throws HttpRequestException
-     */
-    public function __invoke(ServerRequestInterface $req = null)
-    {
-        $this->req = $req;
-        $id = $this->req->getAttribute('id');
-        $id = isset($id) ? urldecode($id) : null;
-        $this->runApiCommand($this->req->getMethod(), $id);
-    }
     
     /**
      * Get params from Get request

@@ -70,6 +70,7 @@ class RdfStorageAdapter extends AbstractStorageAdapter
     protected function appendPropertiesValues(array $propertiesValues = null)
     {
         // default labels
+        // for put|patch (create can generate himself)
         if (empty($this->getPropertiesValues()[RDFS_LABEL])) {
             parent::appendPropertiesValues([RDFS_LABEL => $this->service->createUniqueLabel($this->service->getRootClass())]);
         }
@@ -180,13 +181,13 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         $resource->setPropertiesValues( $this->getPropertiesValues() );
     }
 
-    public function edit($uri)
+    protected function edit($uri)
     {
         $resource = new core_kernel_classes_Resource($uri);
-
+        
         // not editable
         $this->unsetPropertiesValue(RDF_TYPE);
-
+        
         foreach ($this->getPropertiesValues() as $property => $value) {
             $resource->editPropertyValues(new \core_kernel_classes_Property($property), $value);
         }

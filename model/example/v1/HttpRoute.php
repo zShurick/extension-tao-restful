@@ -208,12 +208,6 @@ class HttpRoute extends AbstractRouterAdapter
      */
     protected $req;
 
-    public function __invoke(Request $request)
-    {
-        $this->req = $request;
-        $this->runApiCommand($this->req->getMethod(), $this->req->getParameter('uri'));
-    }
-
     protected $params = null;
     
     protected function getQueryParams()
@@ -227,13 +221,6 @@ class HttpRoute extends AbstractRouterAdapter
 
         return $this->params;
     }
-
-    protected function getList()
-    {
-        $queryParams = $this->req->getParameters();
-        parent::getList($queryParams);
-    }
-
     protected function getOne()
     {
         echo 'one';

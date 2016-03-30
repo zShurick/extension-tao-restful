@@ -24,6 +24,11 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 use Request;
 
+/**
+ * Class TaoRouterAdapter
+ * @package oat\taoRestAPI\model\v1\http\Request\RouterAdapter
+ * @deprecated use Slim, please
+ */
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
     /**

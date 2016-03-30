@@ -41,7 +41,7 @@ abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
     {
         $route = $this->getRouter();
         try {
-            $route($req);
+            $route($req, $req->getAttribute('id'));
 
             $res = $res->withStatus($route->getStatusCode());
             $res->write((new JsonEncoder())->encode($route->getBodyData()));
@@ -76,7 +76,7 @@ abstract class RestApiUnitTestRunner extends TaoPhpUnitTestRunner
      */
     protected function runRouterTest($router, $encoder, $req, &$res)
     {
-        $router($req);
+        $router($req, $req->getAttribute('id'));
         $res = $res->withStatus($router->getStatusCode());
         $this->addHeadersInResponse($router->getHeaders(), $res);
         $res->write($encoder->encode($router->getBodyData()));

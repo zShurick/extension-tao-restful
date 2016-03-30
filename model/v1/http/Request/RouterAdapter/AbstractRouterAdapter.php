@@ -32,9 +32,16 @@ use oat\taoRestAPI\model\v1\http\filters\Paginate;
 use oat\taoRestAPI\model\v1\http\filters\Partial;
 use oat\taoRestAPI\model\v1\http\filters\Sort;
 use oat\taoRestAPI\model\v1\http\Request\Router;
+use Psr\Http\Message\ServerRequestInterface;
 
 abstract class AbstractRouterAdapter extends Router implements RouterAdapterInterface
 {
+    /**
+     * @var ServerRequestInterface
+     */
+    protected $req;
+
+
     /**
      * @var DataStorageInterface
      */
@@ -68,6 +75,28 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         $this->storage = $storage;
     }
 
+    /**
+     * Rest API auto runner
+     *
+     * # Defines and runs the necessary methods for current Http header _method
+     *
+     * ## for dev test with slim, can compile http responses with correct status codes
+     *
+     * @param ServerRequestInterface $req
+     * @throws HttpRequestException
+     */
+    /**
+     * @param ServerRequestInterface|null $req
+     * @param string $id Resource identifier
+     * @throws HttpRequestException
+     */
+    public function __invoke(ServerRequestInterface $req = null, $id = '')
+    {
+        $this->req = $req;
+        $id = isset($id) ? urldecode($id) : null;
+        $this->runApiCommand($this->req->getMethod(), $id);
+    }
+    
     /**
      * @return DataStorageInterface
      */
@@ -193,25 +222,20 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     public function put()
     {
         parent::put();
-        
         $this->storage()->put($this->getResourceId(), $this->getResourceData(true));
-        
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
     }
 
     public function patch()
     {
         parent::patch();
-        
         $this->storage()->patch($this->getResourceId(), $this->getResourceData(true));
-
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
     }
     
     public function delete()
     {
         parent::delete();
-        
         $this->storage()->delete($this->getResourceId());
     }
 

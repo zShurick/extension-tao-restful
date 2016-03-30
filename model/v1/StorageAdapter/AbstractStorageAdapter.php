@@ -90,6 +90,9 @@ abstract class AbstractStorageAdapter implements DataStorageInterface
     
     public function patch($id, array $propertiesValues)
     {
+        // for patch don't use default properties, only updating for requested
+        $this->propertiesValues = [];
+        
         $this->appendPropertiesValues($propertiesValues);
         $this->throwIfResourceNotExists($id);
         return $this->edit($id);
