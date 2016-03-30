@@ -66,9 +66,18 @@ class SlimRouterAdapter extends AbstractRouterAdapter
         return $this->queryParams;
     }
     
+    protected function getUri()
+    {
+        $uri = (string)$this->req->getUri();
+        if (strpos($uri, '?') != false) {
+            $uri = mb_strcut($uri, 0, mb_strpos($uri, '?'));
+        }
+        return $uri;
+    }
+    
     protected function getResourceUrl($id=null)
     {
-        return (string)$this->req->getUri() . '/' . parent::getResourceUrl($id);
+        return  $this->getUri(). '/' . parent::getResourceUrl($id);
     }
     
     protected function getParsedBody()

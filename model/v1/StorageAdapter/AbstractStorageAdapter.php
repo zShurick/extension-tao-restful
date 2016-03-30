@@ -29,27 +29,101 @@ abstract class AbstractStorageAdapter implements DataStorageInterface
 {
 
     /**
-     * Flag - if storage can create new resources with default values
+     * Flag - if storage can create|update resources with default values
      * (i.e. we can send post request without any post data, and as result we'll have resource with default fields)
      * 
      * @var bool
      */
     protected $allowedDefaultResources = false;
-    
+
+    /**
+     * Properties of the RestApi resource model
+     * 
+     * @var array
+     */
+    private $propertiesValues=[];
+
     public function isAllowedDefaultResources() {
         return $this->allowedDefaultResources;
     }
+
+    /**
+     * @param array|null $propertiesValues
+     */
+    protected function appendPropertiesValues(array $propertiesValues = null)
+    {
+        if (is_array($propertiesValues)) {
+            $this->propertiesValues = array_merge($this->getPropertiesValues(), $propertiesValues);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    protected function getPropertiesValues()
+    {
+        return $this->propertiesValues;
+    }
+
+    /**
+     * @param string $key
+     */
+    protected function unsetPropertiesValue($key = '')
+    {
+        if (key_exists($key, $this->propertiesValues)) {
+            unset($this->propertiesValues[$key]);
+        }
+    }
     
+    public function post(array $propertiesValues = null)
+    {
+        $this->appendPropertiesValues($propertiesValues);
+        return $this->create();
+    }
+
     public function put($id, array $propertiesValues)
     {
+        $this->appendPropertiesValues($propertiesValues);
         $this->throwIfResourceNotExists($id);
+        return $this->replace($id);
     }
     
     public function patch($id, array $propertiesValues)
     {
+        $this->appendPropertiesValues($propertiesValues);
         $this->throwIfResourceNotExists($id);
+        return $this->edit($id);
     }
-    
+
+    /**
+     * Create new resource
+     * 
+     * @return mixed
+     */
+    abstract protected function create();
+
+    /**
+     * Replace resource
+     *
+     * @param $id
+     * @return mixed
+     */
+    abstract protected function replace($id);
+
+    /**
+     * Edit resource properties
+     * 
+     * @param $id
+     * @return mixed
+     */
+    abstract protected function edit($id);
+
+    /**
+     * Check if resource exists
+     * 
+     * @param $id
+     * @return mixed
+     */
     abstract public function exists($id);
     
     /**

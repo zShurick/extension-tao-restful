@@ -25,7 +25,7 @@ namespace oat\taoRestAPI\model\v1\StorageAdapter;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\DataStorageInterface;
 
-class ArrayStorageAdapter implements DataStorageInterface
+class ArrayStorageAdapter extends AbstractStorageAdapter
 {
     protected $resourcesData = [];
     
@@ -138,8 +138,15 @@ class ArrayStorageAdapter implements DataStorageInterface
         return $data;
     }
 
-    public function create(array $propertiesValues)
+    public function isAllowedDefaultResources()
     {
+        return false;
+    }
+    
+    protected function create()
+    {
+        $propertiesValues = $this->getPropertiesValues();
+        
         if (!isset($propertiesValues['id'])) {
             throw new RestApiException(__('Resource parameter "id" is required'), 400);
         }
@@ -155,8 +162,10 @@ class ArrayStorageAdapter implements DataStorageInterface
     }
 
     // replace all data
-    public function put($id, array $propertiesValues)
+    protected function replace($id)
     {
+        $propertiesValues = $this->getPropertiesValues();
+
         if (!isset($propertiesValues['id']) || $id != $propertiesValues['id']) {
             throw new RestApiException(__('You can not change id of the resource'), 400);
         }
@@ -165,9 +174,10 @@ class ArrayStorageAdapter implements DataStorageInterface
     }
 
     // change only properties
-    public function patch($id, array $propertiesValues)
+    protected function edit($id)
     {
-        
+        $propertiesValues = $this->getPropertiesValues();
+
         if (isset($propertiesValues['id']) && $id != $propertiesValues['id']) {
             throw new RestApiException(__('You can not change id of the resource'), 400);
         }

@@ -62,6 +62,19 @@ class RdfStorageAdapter extends AbstractStorageAdapter
     {
         $this->service = $service;
         $this->formatter = new core_kernel_classes_ResourceFormatter();
+        
+        // default for rdf prop
+        $this->appendPropertiesValues($this->defaultProperties);
+    }
+
+    protected function appendPropertiesValues(array $propertiesValues = null)
+    {
+        // default labels
+        if (empty($this->getPropertiesValues()[RDFS_LABEL])) {
+            parent::appendPropertiesValues([RDFS_LABEL => $this->service->createUniqueLabel($this->service->getRootClass())]);
+        }
+
+        parent::appendPropertiesValues($propertiesValues);
     }
 
     public function getFields()
@@ -138,48 +151,43 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         return $result;
     }
 
-    protected function getDefaultProperties()
+    protected function create()
     {
-        return $this->defaultProperties;
-    }
-    
-    public function create(array $propertiesValues)
-    {
-        $propertiesValues = array_merge($this->getDefaultProperties(), $propertiesValues);
+        $propertiesValues = $this->getPropertiesValues();
         
         $type = isset($propertiesValues[RDF_TYPE]) ? new core_kernel_classes_Class($propertiesValues[RDF_TYPE]) : $this->service->getRootClass();
         $label = isset($propertiesValues[RDFS_LABEL]) ? $propertiesValues[RDFS_LABEL] : '';
-        unset($propertiesValues[RDFS_LABEL]);
-        unset($propertiesValues[RDF_TYPE]);
-
+        $this->unsetPropertiesValue(RDFS_LABEL);
+        $this->unsetPropertiesValue(RDF_TYPE);
+        
         if ($type->getUri() != $this->service->getRootClass()->getUri()) {
             throw new RestApiException(__('Incorrect type of the resource'), 400);
         }
         
         $resource = $this->service->createInstance($type, $label);
-        $resource->setPropertiesValues($propertiesValues);
+        $resource->setPropertiesValues( $this->getPropertiesValues() );
         return $resource->getUri();
     }
 
-    public function put($uri, array $propertiesValues)
+    protected function replace($uri)
     {
-        parent::put($uri, $propertiesValues);
-        
         $resource = new core_kernel_classes_Resource($uri);
+        
         // delete all properties of the resource
         $this->delete($uri);
         
         // add new properties from propertiesValues
-        $resource->setPropertiesValues($propertiesValues);
+        $resource->setPropertiesValues( $this->getPropertiesValues() );
     }
 
-    public function patch($uri, array $propertiesValues)
+    public function edit($uri)
     {
-        parent::patch($uri, $propertiesValues);
-        
         $resource = new core_kernel_classes_Resource($uri);
 
-        foreach ($propertiesValues as $property => $value) {
+        // not editable
+        $this->unsetPropertiesValue(RDF_TYPE);
+
+        foreach ($this->getPropertiesValues() as $property => $value) {
             $resource->editPropertyValues(new \core_kernel_classes_Property($property), $value);
         }
     }
@@ -242,6 +250,7 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         if (!$resource->hasType($this->service->getRootClass())) {
             throw new RestApiException(__('Incorrect identifier type ' . $this->service->getRootClass()->getUri()), 400);
         }
+        
         return $resource;
     }
     

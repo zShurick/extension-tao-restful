@@ -54,10 +54,10 @@ class PostTest extends RestApiUnitTestRunner
         $this->response = new Response();
 
         $this->routerRunner($this->request, $this->response);
-
+        $this->assertEquals('{"id":7,"title":"beet","type":"vegetable","form":"ellipse","color":"brown"}', (string)$this->response->getBody());
         $this->assertEquals(201, $this->response->getStatusCode());
         $this->assertEquals('Created', $this->response->getReasonPhrase());
-        $this->assertEquals([$this->request->getUri() . '/7'], $this->response->getHeader('Location'));
+        $this->assertEquals(['http://localhost/resources/7'], $this->response->getHeader('Location'));
     }
     
     public function testHttpPostInvalidData()
@@ -99,7 +99,7 @@ class PostTest extends RestApiUnitTestRunner
 
         $this->assertEquals(400, $this->response->getStatusCode());
         $this->assertEquals('Bad Request', $this->response->getReasonPhrase());
-        $this->assertEquals('{"errors":["Empty Request data."]}', (string)$this->response->getBody());
+        $this->assertEquals('{"errors":["Resource parameter \"id\" is required"]}', (string)$this->response->getBody());
         $this->assertFalse($this->response->hasHeader('Location'));
     }
 

@@ -50,9 +50,9 @@ interface DataStorageInterface
 
     /**
      * @param array $propertiesValues
-     * @return array
+     * @return mixed
      */
-    public function create(array $propertiesValues);
+    public function post(array $propertiesValues=null);
 
     /**
      * Replace all resource data

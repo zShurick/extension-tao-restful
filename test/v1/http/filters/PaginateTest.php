@@ -128,12 +128,11 @@ class PaginateTest extends RestApiUnitTestRunner
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
         $this->assertEquals([
-                '&lt;http://api.taotest.example/v1/items?range=0-1&gt;; rel="first"',
-                '&lt;http://api.taotest.example/v1/items?range=3-4&gt;; rel="last"',
-                '&lt;http://api.taotest.example/v1/items?range=1-2&gt;; rel="prev"',
-                '&lt;http://api.taotest.example/v1/items?range=0-1&gt;; rel="next"',
+                '&lt;http://localhost/resources?range=0-1&gt;; rel="first"',
+                '&lt;http://localhost/resources?range=3-4&gt;; rel="last"',
+                '&lt;http://localhost/resources?range=1-2&gt;; rel="prev"',
+                '&lt;http://localhost/resources?range=0-1&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
-        
     }
 
     /**
@@ -152,10 +151,10 @@ class PaginateTest extends RestApiUnitTestRunner
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
         $this->assertEquals([
-            '&lt;http://api.taotest.example/v1/items?range=0-3&gt;; rel="first"',
-            '&lt;http://api.taotest.example/v1/items?range=1-4&gt;; rel="last"',
-            '&lt;http://api.taotest.example/v1/items?range=1-4&gt;; rel="prev"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="next"',
+            '&lt;http://localhost/resources?range=0-3&gt;; rel="first"',
+            '&lt;http://localhost/resources?range=1-4&gt;; rel="last"',
+            '&lt;http://localhost/resources?range=1-4&gt;; rel="prev"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
     }
 
@@ -172,10 +171,10 @@ class PaginateTest extends RestApiUnitTestRunner
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
         $this->assertEquals([
-            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="prev"',
-            '&lt;http://api.taotest.example/v1/items?range=1-1&gt;; rel="next"',
+            '&lt;http://localhost/resources?range=0-0&gt;; rel="first"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="last"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="prev"',
+            '&lt;http://localhost/resources?range=1-1&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
     }
 
@@ -192,10 +191,10 @@ class PaginateTest extends RestApiUnitTestRunner
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
         $this->assertEquals([
-            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
-            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="prev"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="next"',
+            '&lt;http://localhost/resources?range=0-0&gt;; rel="first"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="last"',
+            '&lt;http://localhost/resources?range=2-2&gt;; rel="prev"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
     }
 
@@ -212,10 +211,10 @@ class PaginateTest extends RestApiUnitTestRunner
         $this->assertEquals(['resource 50'], $this->response->getHeader('Accept-Range'));
         $this->assertEquals(4, count($this->response->getHeader('Link')));
         $this->assertEquals([
-            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
-            '&lt;http://api.taotest.example/v1/items?range=4-4&gt;; rel="last"',
-            '&lt;http://api.taotest.example/v1/items?range=3-3&gt;; rel="prev"',
-            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="next"',
+            '&lt;http://localhost/resources?range=0-0&gt;; rel="first"',
+            '&lt;http://localhost/resources?range=4-4&gt;; rel="last"',
+            '&lt;http://localhost/resources?range=3-3&gt;; rel="prev"',
+            '&lt;http://localhost/resources?range=0-0&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
     }
 }

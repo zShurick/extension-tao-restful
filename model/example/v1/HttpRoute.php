@@ -246,4 +246,8 @@ class HttpRoute extends AbstractRouterAdapter
     protected function getResourceUrl($resource = null)
     {
     }
+    
+    protected function getUri()
+    {
+    }
 }

@@ -101,7 +101,7 @@ abstract class Router implements HttpRouterInterface
         $method = strtolower($method);
 
         if (!method_exists($this, $method)) {
-            throw new HttpRequestException(__('Unsupported HTTP request method'), 400);
+            throw new HttpRequestException(__('Unsupported HTTP request method'), 501);
         }
 
         $this->$method();

@@ -55,7 +55,6 @@ class Filter extends AbstractFilter
     {
         if (is_array($this->options['query'])) {
             foreach ($this->options['query'] as $field => $filter) {
-                $field = str_replace('_', '.', $field);
                 if (in_array($field, $this->options['fields'])) {
                     $this->filters[$field] = explode(',', $filter);
                 }

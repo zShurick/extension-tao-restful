@@ -115,7 +115,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         $queryParams = $this->getQueryParams();
         
         $filter = new Filter([
-            'query' => $queryParams,
+            'query' => $this->guessFields($queryParams, $quiet = true),
             'fields' => $this->storage()->getFields(),
         ]);
         
@@ -123,8 +123,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
             $paginate = new Paginate([
                 'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
                 'total' => count($this->storage()->searchInstances()),
-                // todo pagination url
-                'paginationUrl' => '?range=',
+                'paginationUrl' => $this->getUri() . '?range=',
             ]);
         } catch (HttpRequestExceptionWithHeaders $e) {
             // add failed headers if exists
@@ -183,7 +182,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     {
         parent::post();
         
-        $id = $this->storage()->create($this->getResourceData(false));
+        $id = $this->storage()->post($this->getResourceData(false));
         
         // return new resource
         $this->bodyData = $this->storage()->getOne($id, $this->storage()->getFields());
@@ -238,6 +237,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      */
     protected function getResourceUrl($id = null) 
     {
+        
         if ($id && $this->storage()->exists($id)) {
             // use id
         } elseif ($this->getResourceId() && $this->storage()->exists($this->getResourceId())) {
@@ -250,18 +250,68 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     }
 
     /**
+     * Uri for the current RestApi context
+     * @return mixed
+     */
+    abstract protected function getUri();
+    
+    /**
      * Get requested data with validation
+     * 
+     * @param bool $required
      * @return mixed
      * @throws HttpRequestException
      */
     private function getResourceData($required = true)
     {
-        $resourceData = $this->getParsedBody();
-
+        $resourceData = $this->guessFields( $this->getParsedBody() );
+        
         if ($required && !$this->storage()->isAllowedDefaultResources() && !$resourceData) {
             throw new HttpRequestException('Empty Request data.', 400);
         }
 
         return $resourceData;
+    }
+
+    /**
+     * All key from uri change dots on _
+     * example: "?my.var1=val" => ['my_var1' => 'val'], i.e we can't control all options
+     * so try to guess
+     *
+     * @param array|null $parameters
+     * @param bool $quiet - Don't write to log warnings (when looking for fields in query request (Filter))
+     * @return array|null
+     */
+    private function guessFields ( array $parameters = null, $quiet = false )
+    {
+        $resultParams = null;
+        if (isset($parameters) && count($parameters)){
+            $resultParams = [];
+            
+            $guessFields = [];
+            foreach ($this->storage()->getFields() as $key => $fieldName) {
+                $guessFields[$key] = $this->convertFieldName($fieldName);
+            }
+    
+            foreach ($parameters as $parameterName => $value) {
+                if (in_array($parameterName, $this->storage()->getFields())) {
+                    $resultParams[$parameterName] = $value;
+                } else {
+                    $guessField = $this->convertFieldName($parameterName);
+                    if (in_array($guessField, $guessFields)) {
+                        $pos = array_search($guessField, $guessFields);
+                        $resultParams[$this->storage()->getFields()[$pos]] = $value;
+                    } elseif (!$quiet){
+                        \common_Logger::w('RestApi can not find model property ' . $parameterName . ' in fields. Storage ' . get_class($this->storage()));
+                    }
+                }
+            }
+        }
+        return $resultParams;
+    }
+    
+    private function convertFieldName( $name = '' )
+    {
+        return str_replace('_', '.', $name);
     }
 }

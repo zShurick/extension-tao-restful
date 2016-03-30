@@ -39,6 +39,11 @@ class TaoRouterAdapter extends AbstractRouterAdapter
         $this->runApiCommand($this->req->getMethod(), $uri);
     }
 
+    protected function getUri()
+    {
+        return \tao_helpers_Uri::getPath('');
+    }
+
     protected function getResourceUrl($uri = null)
     {
         return \tao_helpers_Uri::getPath('?uri=' . parent::getResourceUrl($uri));
@@ -61,6 +66,19 @@ class TaoRouterAdapter extends AbstractRouterAdapter
 
     protected function getParsedBody()
     {
-        return $this->req->getParameters();
+        switch ($this->req->getMethod()) {
+            case 'PUT':
+                $parameters = \tao_helpers_Http::getJsonDataFromStream();
+                break;
+            default:
+                $parameters = $this->req->getParameters();
+        }
+        
+        //exclude uri parameters (this only for access to resource)
+        if (is_array($parameters) && key_exists('uri', $parameters)) {
+            unset($parameters['uri']);
+        }
+        
+        return $parameters;
     }
 }

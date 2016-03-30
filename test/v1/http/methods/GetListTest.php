@@ -90,10 +90,10 @@ class GetListTest extends RestApiUnitTestRunner
         $this->assertEquals('Partial Content', $this->response->getReasonPhrase());
 
         $this->assertEquals([
-            '&lt;http://api.taotest.example/v1/items?range=0-0&gt;; rel="first"',
-            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="last"',
-            '&lt;http://api.taotest.example/v1/items?range=2-2&gt;; rel="prev"',
-            '&lt;http://api.taotest.example/v1/items?range=1-1&gt;; rel="next"',
+            '&lt;http://localhost/resources?range=0-0&gt;; rel="first"',
+            '&lt;http://localhost/resources?range=2-2&gt;; rel="last"',
+            '&lt;http://localhost/resources?range=2-2&gt;; rel="prev"',
+            '&lt;http://localhost/resources?range=1-1&gt;; rel="next"',
         ], $this->response->getHeader('Link'));
 
         foreach ($this->response->getResourceData() as $item) {

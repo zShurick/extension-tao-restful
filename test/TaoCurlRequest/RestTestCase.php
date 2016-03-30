@@ -113,10 +113,17 @@ abstract class RestTestCase extends TaoPhpUnitTestRunner
     protected function curl($url, $method = CURLOPT_HTTPGET, $returnType = "data", $curlopt_httpheaders = array(), $postfields = '')
     {
         $process = curl_init($url);
-        if ($method != "DELETE") {
-            curl_setopt($process, $method, 1);
+
+        /**
+         * For sending json string I had to use different PUT request instead of build-in
+         * For streams file sending, must to use build-in PUT 
+         */
+        if ($method == CURLOPT_PUT && is_string($postfields)) {
+            curl_setopt($process, CURLOPT_CUSTOMREQUEST, "PUT");
+        } elseif (in_array($method, ['DELETE', 'PATCH'])) {
+            curl_setopt($process, CURLOPT_CUSTOMREQUEST, $method);
         } else {
-            curl_setopt($process, CURLOPT_CUSTOMREQUEST, "DELETE");
+            curl_setopt($process, $method, 1);
         }
 
         if($method == CURLOPT_PUT && is_array($postfields) && count($postfields)==2) {
@@ -129,20 +136,23 @@ abstract class RestTestCase extends TaoPhpUnitTestRunner
         curl_setopt($process, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($process, CURLOPT_SSL_VERIFYPEER, false);
         // debug
-        //curl_setopt($process, CURLOPT_VERBOSE, true);
+        // curl_setopt($process, CURLOPT_VERBOSE, true);
 
         $headers = array_merge(array(
             "Accept: application/json"
         ), $curlopt_httpheaders);
+        
         curl_setopt($process, CURLOPT_HTTPHEADER, $headers);
-        if ($method == CURLOPT_POST) {
+        
+        if ($method == CURLOPT_POST || (in_array($method, [CURLOPT_PUT, 'PATCH']) && is_string($postfields))) {
             curl_setopt($process, CURLOPT_POSTFIELDS, $postfields);
         }
-        // curl_setopt($process,CURLOPT_HTTPHEADER,$curlopt_httpheaders);
+        
         $data = curl_exec($process);
         if ($returnType != "data") {
             $data = curl_getinfo($process, $returnType);
         }
+        
         curl_close($process);
         return $data;
     }
@@ -220,7 +230,7 @@ abstract class RestTestCase extends TaoPhpUnitTestRunner
         $http_status = curl_getinfo($process, CURLINFO_HTTP_CODE);
         $this->assertEquals($http_status, "200");
         $contentType = curl_getinfo($process, CURLINFO_CONTENT_TYPE);
-        $this->assertEquals($contentType, "application/xml");
+        $this->assertEquals($contentType, "application/xml; charset=UTF-8");
         curl_close($process);
 
         // should return a 200
@@ -237,7 +247,7 @@ abstract class RestTestCase extends TaoPhpUnitTestRunner
     public function testGetAll($service, $topclass = null){
 
         $instances = $this->getInstance($topclass);
-        $data = $this->HttpGet($service)['data'];
+        $data = $this->HttpGet($service);
         foreach ($data as $results)
             $this->checkResourceStructure($results, $instances);
     }
@@ -333,6 +343,20 @@ abstract class RestTestCase extends TaoPhpUnitTestRunner
     protected function checkPut($uri, array $headers=[], $postFields = '')
     {
         $returnedData = $this->curl($this->host . $uri, CURLOPT_PUT, 'data', $headers, $postFields);
+        return $this->getData($returnedData);
+    }
+
+    /**
+     * CRUD HTTP PATCH request
+     *
+     * @param $uri
+     * @param array $headers
+     * @param string $postFields
+     * @return mixed
+     */
+    protected function checkPatch($uri, array $headers=[], $postFields = '')
+    {
+        $returnedData = $this->curl($this->host . $uri, 'PATCH', 'data', $headers, $postFields);
         return $this->getData($returnedData);
     }
 

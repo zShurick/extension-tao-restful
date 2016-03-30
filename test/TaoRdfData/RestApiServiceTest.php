@@ -352,6 +352,35 @@ class RestApiServiceTest extends RestApiUnitTestRunner
         $this->assertEquals('Bad Request', $response->getReasonPhrase());
         $this->assertEquals('{"errors":["Incorrect type of the resource"]}', (string)$response->getBody());
     }
+
+    public function testPostWithoutBody()
+    {
+
+        $this->request('POST', '/resources', function (Request $req, Response $res) {
+
+            $req = $req->withAttribute('id', $req->getParam('id'));
+
+            try {
+                $this->service
+                    ->setRouter($this->getRouter())
+                    ->execute(function ($router, $encoder) use ($req, &$res) {
+                        $this->runRouterTest($router, $encoder, $req, $res);
+                    });
+            } catch (RestApiException $e) {
+                $res = $res->withStatus($e->getCode());
+                $res = $res->withJson(['errors' => [$e->getMessage()]]);
+            }
+
+            return $this->response = $res;
+        });
+
+        $this->assertEquals(201, $this->response->getStatusCode());
+        $this->assertEquals('Created', $this->response->getReasonPhrase());
+        $body = json_decode((string)$this->response->getBody());
+        
+        $resource = new \core_kernel_classes_Resource($body[0]->uri);
+        $resource->delete(true);
+    }    
     
     /**
      * @return string
