@@ -48,8 +48,8 @@ class Swagger extends DocsProxy
         
         $docs = [];
         try{
-            $docs[$class] = \Swagger\scan($path);
-            $docs[$class]['parent'] = $this->goDipper($class);
+            $docs[$class]['swagger'] = \Swagger\scan($path);
+            $docs[$class]['parent'] = $this->getParent($class);
         } catch (\Exception $e) {
             // if swagger docs not found in current class, looking in parent classes
             if ($e->getMessage() == 'Required @SWG\Info() not found') {
@@ -57,8 +57,9 @@ class Swagger extends DocsProxy
                 if (!isset($docs[$class])) {
                     $docs[$class] = [];
                 }
-                
-                $docs[$class]['parent'] = $this->goDipper($class);
+
+                $docs[$class]['swagger'] = null;
+                $docs[$class]['parent'] = $this->getParent($class);
             } else {
                 throw new RestApiDocsException($e->getMessage());
             }

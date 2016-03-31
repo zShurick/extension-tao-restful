@@ -52,7 +52,7 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     public function testInvalidConfigException()
     {
         $service = new DocsService([]);
-        $service->getApiDocs();
+        $service->generateDocs();
     }
 
     /**
@@ -61,7 +61,7 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     public function testWithoutSwaggerPhpDoc()
     {
         $service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\test\docs\DocsServiceTest']]);
-        $service->getApiDocs();
+        $service->generateDocs();
     }
 
     /**
@@ -69,21 +69,24 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
      */
     public function testIncorrectSection()
     {
-        $this->service->getApiDocs('FailureService');
+        $this->service->generateDocs('FailureService');
     }
 
     
     public function testGenerateDocs()
     {
         $data = $this->service->generateDocs();
-        
+
         $this->assertTrue(isset($data['Example']));
-        $this->assertEquals('2.0', $data['Example']->swagger);
+        $this->assertEquals('2.0', $data['Example'][$this->service->getOption(DocsService::OPTION_ROUTERS)['Example']]['swagger']->swagger);
+
+        $this->assertTrue(isset($data['AnotherExample']));
+        $this->assertEquals('2.0', $data['AnotherExample'][$this->service->getOption(DocsService::OPTION_ROUTERS)['AnotherExample']]['parent']['oat\taoRestAPI\test\v1\Mocks\DB']['swagger']->swagger);
     }
 
     public function testGenerateSectionDocs()
     {
-        $data = $this->service->getApiDocs('Example');
+        $data = $this->service->generateDocs('Example');
         $this->assertTrue(isset($data['Example']));
         $this->assertEquals('2.0', $data['Example']->swagger);
     }
