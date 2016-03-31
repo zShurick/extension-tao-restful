@@ -48,4 +48,23 @@ abstract class DocsProxy implements DocsProxyInterface
         $path = $reflectionClass->getFileName();
         return $path;
     }
+    
+    /**
+     * Collect all documentation from class collection
+     * 
+     * @param $class
+     * @return array|mixed
+     */
+    protected function goDipper($class)
+    {
+        $docs = [];
+        $reflectionClass = new \ReflectionClass($class);
+        while ($parent = $reflectionClass->getParentClass()) {
+
+            $docs[] = $this->generateDocs($parent->getName());
+            $reflectionClass = $parent;
+        }
+        
+        return $docs;
+    }
 }
