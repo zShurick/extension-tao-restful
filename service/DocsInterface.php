@@ -22,16 +22,20 @@
 namespace oat\taoRestAPI\service;
 
 
+use oat\taoRestAPI\exception\RestApiDocsException;
+
 interface DocsInterface
 {
+
+    const SERVICE_ID = 'taoRestAPI/docs';
     
     /**
      * 
      * 
-     * @param string $section [Name of the Api section ('Example','taoItem', 'taoQtiItem')]
+     * @param string $section [Name of the Api section ('Example','taoItems', 'taoQtiItem')]
      *    ### if $section is empty - get all sections
      * @return mixed
      * @throws RestApiDocsException
      */
-    public function getApiDocs( $section = '' );
+    public function generateDocs( $section = '' );
 }

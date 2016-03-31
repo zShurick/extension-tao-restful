@@ -22,6 +22,7 @@
 namespace oat\taoRestAPI\service\v1;
 
 
+use oat\oatbox\service\ConfigurableService;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\AuthenticationInterface;
 use oat\taoRestAPI\model\DataEncoderInterface;
@@ -34,7 +35,7 @@ use oat\taoRestAPI\service\RestApiInterface;
  * Class RestApiServiceV1
  * @package oat\taoRestAPI\model\restApi
  */
-class RestApiService implements RestApiInterface
+class RestApiService extends ConfigurableService implements RestApiInterface
 {
 
     /**

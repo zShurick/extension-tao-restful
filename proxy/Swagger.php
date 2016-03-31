@@ -39,13 +39,36 @@ class Swagger extends DocsProxy
      * @return mixed
      * @throws RestApiDocsException
      */
-    public function getApiDocs($class = '')
+    public function generateDocs($class = '')
     {
         $path = $this->getPath($class);
         if (!file_exists($path)) {
-            throw new RestApiDocsException('Incorrect file path for parsing documentation');
+            throw new RestApiDocsException('Incorrect file path for parsing documentation ' . $class);
         }
 
-        return \Swagger\scan($path);
+        $docs = null;
+        try{
+            $docs = \Swagger\scan($path);
+        } catch (\Exception $e) {
+            // if swagger docs not found in current class, looking in subclasses
+            if ($e->getMessage() == 'Required @SWG\Info() not found') {
+
+                $reflectionClass = new \ReflectionClass($class);
+                while ($parent = $reflectionClass->getParentClass()) {
+                    
+                    $docs = $this->generateDocs($parent->getName());
+                    if (isset($docs)) {
+                        break;
+                    }
+                    
+                    $reflectionClass = $parent;
+                }
+            }
+            
+            if (!isset ($docs)) {
+                throw new RestApiDocsException('RestApi documentation does not found');
+            }
+        }
+        return $docs;
     }
 }

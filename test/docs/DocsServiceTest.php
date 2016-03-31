@@ -40,7 +40,10 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     public function setUp()
     {
         parent::setUp();
-        $this->service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute']]);
+        $this->service = new DocsService(['proxy' => 'Swagger', 'routes' => [
+            'Example' => '\oat\taoRestAPI\test\v1\Mocks\DB',
+            'AnotherExample' => '\oat\taoRestAPI\test\v1\Mocks\AnotherDocs'
+        ]]);
     }
 
     /**
@@ -53,27 +56,12 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     }
 
     /**
-     * catch trigger_error from Swagger
-     * @expectedException \ReflectionException
+     * @expectedException \oat\taoRestAPI\exception\RestApiDocsException
      */
     public function testWithoutSwaggerPhpDoc()
     {
-        $service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\test\docs\RestApiDocsServiceTest']]);
+        $service = new DocsService(['proxy' => 'Swagger', 'routes' => ['Example' => '\oat\taoRestAPI\test\docs\DocsServiceTest']]);
         $service->getApiDocs();
-    }
-    
-    public function testGetDocs()
-    {
-        $data = $this->service->getApiDocs();
-        $this->assertTrue(isset($data['Example']));
-        $this->assertEquals('2.0', $data['Example']->swagger);
-    }
-    
-    public function testSection()
-    {
-        $data = $this->service->getApiDocs('Example');
-        $this->assertTrue(isset($data['Example']));
-        $this->assertEquals('2.0', $data['Example']->swagger);
     }
 
     /**
@@ -82,5 +70,21 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     public function testIncorrectSection()
     {
         $this->service->getApiDocs('FailureService');
+    }
+
+    
+    public function testGenerateDocs()
+    {
+        $data = $this->service->generateDocs();
+        
+        $this->assertTrue(isset($data['Example']));
+        $this->assertEquals('2.0', $data['Example']->swagger);
+    }
+
+    public function testGenerateSectionDocs()
+    {
+        $data = $this->service->getApiDocs('Example');
+        $this->assertTrue(isset($data['Example']));
+        $this->assertEquals('2.0', $data['Example']->swagger);
     }
 }

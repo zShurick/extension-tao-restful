@@ -15,37 +15,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- *
+ * 
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\service\docs;
+namespace oat\taoRestAPI\test\v1\Mocks;
 
 
-use oat\taoRestAPI\service\DocsProxyInterface;
-use ReflectionClass;
-
-abstract class DocsProxy implements DocsProxyInterface
+class AnotherDocs extends DB
 {
 
-    public function generate( array $routes = [] )
-    {
-        $docs = [];
-        foreach ($routes as $name => $class) {
-            $docs[$name] = $this->generateDocs( $class );
-        }
-        
-        return $docs;
-    }
-    
-    /**
-     * @param $class
-     * @return string
-     */
-    protected function getPath($class)
-    {
-        $reflectionClass = new ReflectionClass($class);
-        $path = $reflectionClass->getFileName();
-        return $path;
-    }
 }

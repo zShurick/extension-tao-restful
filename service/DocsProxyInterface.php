@@ -30,5 +30,4 @@ interface DocsProxyInterface extends DocsInterface
      * @return array of Json By sections
      */
     public function generate();
-    
 }

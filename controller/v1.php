@@ -23,12 +23,15 @@ namespace oat\taoRestAPI\controller;
 
 
 use oat\taoRestAPI\exception\RestApiException;
-use oat\taoRestAPI\model\example\v1\HttpRoute;
+use oat\taoRestAPI\helpers\Response;
 use oat\taoRestAPI\model\v1\http\Request\DataFormat;
+use oat\taoRestAPI\model\v1\http\Request\RouterAdapter\SlimRouterAdapter;
 use oat\taoRestAPI\proxy\BasicAuthentication;
 use oat\taoRestAPI\service\docs\DocsService;
 use oat\taoRestAPI\service\v1\RestApiService;
 use oat\taoRestAPI\test\v1\Mocks\DB;
+use Slim\Http\Environment;
+use Slim\Http\Request;
 use tao_actions_CommonModule;
 
 /**
@@ -56,19 +59,13 @@ class v1 extends tao_actions_CommonModule
     public function __construct()
     {
         parent::__construct();
-        $this->service = new RestApiService();
-        $this->docsService = new DocsService([
-            'proxy' => 'Swagger',
-            'routes' => [
-                'Example' => '\oat\taoRestAPI\model\example\v1\HttpRoute',
-                'taoItems' => '\oat\taoItems\model\Rest\v1\HttpRoute',
-            ]
-        ]);
+        $this->service = $this->getServiceManager()->get(RestApiService::SERVICE_ID);
+        $this->docsService = $this->getServiceManager()->get(DocsService::SERVICE_ID);
     }
 
     public function jsonDoc()
     {
-        $this->returnJson( $this->docsService->getApiDocs()['taoItems'] );
+        $this->returnJson( $this->docsService->getApiDocs()['Example'] );
     }
 
     public function documentation()
@@ -87,13 +84,18 @@ class v1 extends tao_actions_CommonModule
         try {
             $this->service
                 ->setEncoder(new DataFormat())
-                ->setRouter(new HttpRoute(new DB()))
+                ->setRouter(new SlimRouterAdapter(new DB()))
                 ->setAuth(new BasicAuthentication())
                 ->execute(function ($router, $encoder) {
 
-                    $router($this->getRequest());
+                    $request = Request::createFromEnvironment(new Environment($_SERVER));
+                    $router(
+                        $request,
+                        $request->getQueryParam('uri')
+                    );
 
-                    $this->service->writeResponse(
+
+                    Response::write(
                         $router->getStatusCode(),
                         $encoder->getContentType(),
                         $router->getHeaders(),
@@ -101,7 +103,7 @@ class v1 extends tao_actions_CommonModule
                     );
                 });
         } catch (RestApiException $e) {
-            $this->service->writeResponse($e->getCode(), 'text/plain', [], $e->getMessage());
+            Response::write($e->getCode(), 'text/plain', [], $e->getMessage());
         }
     }
 }
