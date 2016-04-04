@@ -87,7 +87,13 @@ class DocsServiceTest extends TaoPhpUnitTestRunner
     public function testGenerateSectionDocs()
     {
         $data = $this->service->generateDocs('Example');
+        
         $this->assertTrue(isset($data['Example']));
-        $this->assertEquals('2.0', $data['Example']->swagger);
+        $this->assertEquals('2.0', $data['Example'][$this->service->getOption(DocsService::OPTION_ROUTERS)['Example']]['swagger']->swagger);
+    }
+    
+    public function testJsonDocs()
+    {
+        $data = $this->service->jsonDocs();
     }
 }

@@ -22,9 +22,11 @@
 namespace oat\taoRestAPI\service\docs;
 
 
+use oat\oatbox\filesystem\FileSystemService;
 use oat\oatbox\service\ConfigurableService;
 use oat\taoRestAPI\exception\RestApiDocsException;
 use oat\taoRestAPI\service\DocsInterface;
+use Swagger\Annotations\Swagger;
 
 /**
  * Class DocsService
@@ -36,6 +38,7 @@ class DocsService extends ConfigurableService implements DocsInterface
 {
     const OPTION_PROXY = 'proxy';
     const OPTION_ROUTERS = 'routes';
+    const OPTION_STORAGE = 'docs';
     
     /**
      * @var DocsProxy
@@ -63,7 +66,6 @@ class DocsService extends ConfigurableService implements DocsInterface
      */
     public function generateDocs($section = '')
     {
-        
         if (!$this->hasOption(self::OPTION_ROUTERS) || !count($this->getOption(self::OPTION_ROUTERS))) {
             throw new RestApiDocsException(__('Incorrect routes data for Restful documentations'));
         }
@@ -80,5 +82,50 @@ class DocsService extends ConfigurableService implements DocsInterface
         }
     
         return $data;
+    }
+
+    /**
+     * @param string $section
+     * @throws RestApiDocsException
+     * @return string Json
+     */
+    public function jsonDocs($section = '')
+    {
+        $docs = $this->generateDocs($section);
+
+        return json_encode($this->compiler($docs));
+    }
+
+    /**
+     * Generate one statistics from many
+     * 
+     * @param $docs [swagger, parent => [...]]
+     * @param array|null $arrDocs
+     * @return array
+     */
+    private function compiler($docs, array $arrDocs = null)
+    {
+        // get section
+        while (count($docs)) {
+            $section = array_pop($docs);
+            $arrDocs = $this->compileTree($section);
+        }
+        
+        return $arrDocs;
+    }
+    
+    private function compileTree(array $section)
+    {
+        $docs = [];
+        $row = array_pop($section);
+        if ( ($row['swagger'] instanceof Swagger) ) {
+            $row['swagger'];
+        }
+        
+        if ($row['parent']) {
+            $this->compileTree($row['parent']);
+        }
+        
+        return $docs;
     }
 }

@@ -32,7 +32,9 @@ return array(
     'acl' => array(
         array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#AnonymousRole', array('ext' => 'taoRestAPI')),
     ),
-    'install' => array(),
+    'install' => array(
+        'oat\\taoRestAPI\\scripts\\install\\RegisterRestApiDocsStorage',
+    ),
     'uninstall' => array(),
     'routes' => array(
         '/taoRestAPI' => 'oat\\taoRestAPI\\controller'
