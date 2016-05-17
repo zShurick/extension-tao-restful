@@ -82,10 +82,6 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      *
      * ## for dev test with slim, can compile http responses with correct status codes
      *
-     * @param ServerRequestInterface $req
-     * @throws HttpRequestException
-     */
-    /**
      * @param ServerRequestInterface|null $req
      * @param string $id Resource identifier
      * @throws HttpRequestException

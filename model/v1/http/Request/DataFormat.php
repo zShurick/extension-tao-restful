@@ -25,7 +25,6 @@ namespace oat\taoRestAPI\model\v1\http\Request;
 use common_exception_ClientException;
 use oat\taoRestAPI\exception\HttpRequestException;
 use oat\taoRestAPI\model\HttpDataFormatInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use tao_helpers_Http;
 
 class DataFormat implements HttpDataFormatInterface

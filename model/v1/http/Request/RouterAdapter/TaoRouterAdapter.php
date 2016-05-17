@@ -22,27 +22,14 @@
 namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
-use Request;
-
 /**
+ * Adapter for clearfw which using in TAO
+ * 
  * Class TaoRouterAdapter
  * @package oat\taoRestAPI\model\v1\http\Request\RouterAdapter
- * @deprecated use Slim, please
  */
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
-    /**
-     * @var Request
-     */
-    protected $req;
-
-    public function __invoke(Request $req)
-    {
-        $this->req = $req;
-        $queryParams = $this->getQueryParams();
-        $uri = isset($queryParams['uri']) ? $queryParams['uri'] : null;
-        $this->runApiCommand($this->req->getMethod(), $uri);
-    }
 
     protected function getUri()
     {

@@ -43,6 +43,8 @@ use tao_actions_CommonModule;
 class v1 extends tao_actions_CommonModule
 {
 
+    const CONFIG_NAME = 'restApi';
+
     /**
      * @var RestApiService
      */
@@ -65,7 +67,7 @@ class v1 extends tao_actions_CommonModule
 
     public function jsonDoc()
     {
-        $this->returnJson( $this->docsService->getApiDocs()['Example'] );
+        $this->returnJson($this->docsService->getApiDocs()['Example']);
     }
 
     public function documentation()
@@ -102,6 +104,81 @@ class v1 extends tao_actions_CommonModule
                         $encoder->encode($router->getBodyData())
                     );
                 });
+        } catch (RestApiException $e) {
+            Response::write($e->getCode(), 'text/plain', [], $e->getMessage());
+        }
+    }
+
+    /**
+     * System of rules or standard that defines the syntax, semantics and synchronization
+     * of communication and possible error recovery methods
+     *
+     * array $config
+     *      [
+     *          // Auth method for access to RestApi protocol
+     *          'authenticator' => '@see \oat\taoRestAPI\model\AuthenticationInterface',
+     *
+     *          // Default definer for the format of the data
+     *          'encoder' => '@see \oat\taoRestAPI\model\HttpDataFormatInterface',
+     *
+     *          // Adapter for requested data from different frameworks (Slim, ClearFw)
+     *          'routerAdapter' => '@see \oat\taoRestAPI\model\v1\http\Request\RouterAdapter',
+     *
+     *          // Adapter for data access (Array, Qti, Rdf ... types of the data storage)
+     *          'storageAdapter' => '@see \oat\taoRestAPI\model\DataStorageInterface',
+     *
+     *          // Service which implements access to storage data
+     *          // @optional
+     *          'storageService' => '@see \tao_models_classes_ClassService',
+     *      ]
+     */
+    public function protocol()
+    {
+        $parts = explode('/', $this->getRequest()->getRequestURI());
+
+        $extensionId = $parts[1];
+        $extension = \common_ext_ExtensionsManager::singleton()->getExtensionById($extensionId);
+        $config = $extension->getConfig(self::CONFIG_NAME);
+
+        try {
+
+            if (isset($config['storageService'])) {
+                // if str pos :: then singleton else should use service manager 
+                if (is_array($config['storageService'])) {
+                    $storageService = call_user_func($config['storageService']);
+                } else {
+                    $storageService = new $config['storageService'];
+                }
+                $storageAdapter = new $config['storageAdapter']( $storageService );
+            } else {
+                $storageAdapter = new $config['storageAdapter'];
+            }
+
+            if (isset($config['encoder'])) {
+                $this->service->setEncoder(new $config['encoder']);
+            }
+            
+            $this->service->setRouter(new $config['routerAdapter']($storageAdapter));
+
+            if (isset($config['authenticator'])) {
+                $this->service->setAuth(new $config['authenticator']);
+            }
+            
+            $this->service->execute(function ($router, $encoder) {
+
+                $request = Request::createFromEnvironment(new Environment($_SERVER));
+                $router (
+                    $request,
+                    $request->getQueryParam('uri')
+                );
+
+                Response::write(
+                    $router->getStatusCode(),
+                    $encoder->getContentType(),
+                    $router->getHeaders(),
+                    $encoder->encode($router->getBodyData())
+                );
+            });
         } catch (RestApiException $e) {
             Response::write($e->getCode(), 'text/plain', [], $e->getMessage());
         }

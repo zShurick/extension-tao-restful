@@ -22,6 +22,11 @@
 namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 
 
+/**
+ * Adapter for Slim framework
+ * Class SlimRouterAdapter
+ * @package oat\taoRestAPI\model\v1\http\Request\RouterAdapter
+ */
 class SlimRouterAdapter extends AbstractRouterAdapter
 {
     

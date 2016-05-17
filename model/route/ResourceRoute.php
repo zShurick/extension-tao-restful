@@ -19,14 +19,31 @@
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
-namespace oat\taoRestAPI\model;
+namespace oat\taoRestAPI\model\route;
 
 
-interface HttpDataFormatInterface
+use oat\tao\model\routing\Route;
+
+
+/**
+ * #1 Looking for {ExtName}/RestApi/v{int} in url
+ * #2 Load Configuration from extension and append it on RestApi router
+ * #2.1 Throw Extension if configuration file does not exists
+ * 
+ * Class ResourceRoute
+ * @package oat\taoRestAPI\model\route
+ */
+class ResourceRoute extends Route
 {
-    
-    /**
-     * @return DataEncoderInterface
-     */
-    public function encoder();
+    public function resolve($relativeUrl) {
+        try {
+            $parts = explode('/', $relativeUrl);
+            if ($parts[1] == 'RestApi' && preg_match('/v\d+/', $parts[2]) == 1) {
+                return 'oat\\taoRestAPI\\controller\\v1@protocol';
+            }
+        } catch (\ResolverException $r) {
+            // namespace does not match URL, aborting
+        }
+        return null;
+    }
 }

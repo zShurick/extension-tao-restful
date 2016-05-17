@@ -29,15 +29,17 @@ return array(
     'requires' => array(
         'tao' => '>=2.17.0',
     ),
-    'acl' => array(
-        array('grant', 'http://www.tao.lu/Ontologies/generis.rdf#AnonymousRole', array('ext' => 'taoRestAPI')),
-    ),
+    'acl' => array(),
     'install' => array(
         'oat\\taoRestAPI\\scripts\\install\\RegisterRestApiDocsStorage',
     ),
     'uninstall' => array(),
     'routes' => array(
-        '/taoRestAPI' => 'oat\\taoRestAPI\\controller'
+        '/taoRestAPI' => 'oat\\taoRestAPI\\controller',
+        'special' => array(
+            'class' => 'oat\\taoRestAPI\\model\\route\\ResourceRoute',
+            'namespace' => LOCAL_NAMESPACE
+        )
     ),
     'constants' => array(
         "DIR_VIEWS" => dirname(__FILE__) . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR,
