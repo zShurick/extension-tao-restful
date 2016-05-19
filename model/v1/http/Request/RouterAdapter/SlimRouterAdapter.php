@@ -30,6 +30,11 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 class SlimRouterAdapter extends AbstractRouterAdapter
 {
     
+    protected function getAttribute($key = '')
+    {
+        return $this->req->getAttribute($key);
+    }
+
     /**
      * Get params from Get request
      */

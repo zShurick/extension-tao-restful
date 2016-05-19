@@ -22,7 +22,11 @@
 namespace oat\taoRestAPI\model\route;
 
 
+use oat\oatbox\service\ServiceManager;
 use oat\tao\model\routing\Route;
+use oat\taoRestAPI\exception\RestApiException;
+use oat\taoRestAPI\helpers\Response;
+use oat\taoRestAPI\service\v1\RestApiService;
 
 
 /**
@@ -35,11 +39,65 @@ use oat\tao\model\routing\Route;
  */
 class ResourceRoute extends Route
 {
+    const CONFIG_NAME = 'restApi';
+    
     public function resolve($relativeUrl) {
         try {
+            
             $parts = explode('/', $relativeUrl);
             if ($parts[1] == 'RestApi' && preg_match('/v\d+/', $parts[2]) == 1) {
-                return 'oat\\taoRestAPI\\controller\\v1@protocol';
+                //return 'oat\\taoRestAPI\\controller\\v1@protocol';
+                
+                //$parts = explode('/', $this->getRequest()->getRequestURI());
+                //var_dump($this->getExtension());die;
+                $extensionId = $parts[0];
+                $extension = \common_ext_ExtensionsManager::singleton()->getExtensionById($extensionId);
+                $config = $extension->getConfig(self::CONFIG_NAME);
+
+                try {
+
+                    $service = ServiceManager::getServiceManager()->get(RestApiService::SERVICE_ID);
+                    
+                    if (isset($config['storageService'])) {
+                        // if str pos :: then singleton else should use service manager 
+                        if (is_array($config['storageService'])) {
+                            $storageService = call_user_func($config['storageService']);
+                        } else {
+                            $storageService = new $config['storageService'];
+                        }
+                        $storageAdapter = new $config['storageAdapter']( $storageService );
+                    } else {
+                        $storageAdapter = new $config['storageAdapter'];
+                    }
+
+                    if (isset($config['encoder'])) {
+                        $service->setEncoder(new $config['encoder']);
+                    }
+
+                    $service->setRouter(new $config['routerAdapter']($storageAdapter));
+
+                    if (isset($config['authenticator'])) {
+                        $service->setAuth(new $config['authenticator']);
+                    }
+
+                    $service->execute(function ($router, $encoder) use ($config) {
+                        
+                        $router(
+                            \Context::getInstance()->getRequest(),
+                            $config['idRule']
+                        );
+                        
+                        Response::write(
+                            $router->getStatusCode(),
+                            $encoder->getContentType(),
+                            $router->getHeaders(),
+                            $encoder->encode($router->getBodyData())
+                        );
+                    });
+                } catch (RestApiException $e) {
+                    Response::write($e->getCode(), 'text/plain', [], $e->getMessage());
+                }
+                
             }
         } catch (\ResolverException $r) {
             // namespace does not match URL, aborting

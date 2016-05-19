@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Copyright (c) 2016  (original work) Open Assessment Technologies SA;
- * 
+ *
  * @author Alexander Zagovorichev <zagovorichev@1pt.com>
  */
 
@@ -82,17 +82,47 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      *
      * ## for dev test with slim, can compile http responses with correct status codes
      *
-     * @param ServerRequestInterface|null $req
-     * @param string $id Resource identifier
+     * @param $req
+     * @param array $idRule
      * @throws HttpRequestException
      */
-    public function __invoke(ServerRequestInterface $req = null, $id = '')
+    public function __invoke($req = null, array $idRule)
     {
         $this->req = $req;
-        $id = isset($id) ? urldecode($id) : null;
-        $this->runApiCommand($this->req->getMethod(), $id);
+        $this->runApiCommand($this->req->getMethod(), $this->getId($idRule));
     }
-    
+
+    private function getId(array $idRule)
+    {
+        $id = null;
+
+        if (!isset($idRule['type']) || !isset($idRule['key']) || !in_array($idRule['type'], ['get', 'param'])) {
+            throw new HttpRequestException('Incorrect definition of the rule for identifier in RestApi configuration file', 500);
+        }
+
+
+        switch ($idRule['type']) {
+            case 'get':
+                $params = $this->getQueryParams();
+                if (isset($params[$idRule['key']])) {
+                    $id = $params[$idRule['key']];
+                }
+                break;
+            case 'param':
+                $id = $this->getAttribute($idRule['key']);
+                break;
+            //case 'post' ...
+        }
+        
+        return $id;
+    }
+
+    /**
+     * @param string $key
+     * @return string
+     */
+    abstract protected function getAttribute($key = '');
+
     /**
      * @return DataStorageInterface
      */
@@ -134,16 +164,16 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      * @return array of the requests params
      */
     abstract protected function getQueryParams();
-    
+
     protected function getList()
     {
         $queryParams = $this->getQueryParams();
-        
+
         $filter = new Filter([
             'query' => $this->guessFields($queryParams, $quiet = true),
             'fields' => $this->storage()->getFields(),
         ]);
-        
+
         try {
             $paginate = new Paginate([
                 'query' => isset($queryParams['range']) ? $queryParams['range'] : '',
@@ -186,15 +216,15 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         if ($this->getStatusCode() == 200 && $paginate->getStatusCode()) {
             $this->setStatusCode($paginate->getStatusCode());
         }
-        
+
         $this->addHeaders($paginate->getHeaders());
     }
-    
+
     protected function getOne()
     {
         $queryParams = $this->getQueryParams();
         $partialFields = isset($queryParams['fields']) ? $queryParams['fields'] : '';
-        
+
         $partial = new Partial([
             'query' => $partialFields,
             'fields' => $this->storage()->getFields(),
@@ -202,13 +232,13 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
 
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $partial->getFields());
     }
-    
+
     public function post()
     {
         parent::post();
-        
+
         $id = $this->storage()->post($this->getResourceData(false));
-        
+
         // return new resource
         $this->bodyData = $this->storage()->getOne($id, $this->storage()->getFields());
         $this->setStatusCode(201);
@@ -228,7 +258,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         $this->storage()->patch($this->getResourceId(), $this->getResourceData(true));
         $this->bodyData = $this->storage()->getOne($this->getResourceId(), $this->storage()->getFields());
     }
-    
+
     public function delete()
     {
         parent::delete();
@@ -243,7 +273,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
     /**
      * Get parsed request body (for put, patch, post requests)
      * for validation can be used $this->getResourceData
-     * 
+     *
      * @return mixed
      */
     abstract protected function getParsedBody();
@@ -255,9 +285,9 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      * @return mixed|null
      * @throws RestApiException
      */
-    protected function getResourceUrl($id = null) 
+    protected function getResourceUrl($id = null)
     {
-        
+
         if ($id && $this->storage()->exists($id)) {
             // use id
         } elseif ($this->getResourceId() && $this->storage()->exists($this->getResourceId())) {
@@ -265,7 +295,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         } else {
             throw new RestApiException('Undefined resource identifier', 400);
         }
-        
+
         return $id;
     }
 
@@ -274,18 +304,18 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      * @return mixed
      */
     abstract protected function getUri();
-    
+
     /**
      * Get requested data with validation
-     * 
+     *
      * @param bool $required
      * @return mixed
      * @throws HttpRequestException
      */
     private function getResourceData($required = true)
     {
-        $resourceData = $this->guessFields( $this->getParsedBody() );
-        
+        $resourceData = $this->guessFields($this->getParsedBody());
+
         if ($required && !$this->storage()->isAllowedDefaultResources() && !$resourceData) {
             throw new HttpRequestException('Empty Request data.', 400);
         }
@@ -302,17 +332,17 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
      * @param bool $quiet - Don't write to log warnings (when looking for fields in query request (Filter))
      * @return array|null
      */
-    private function guessFields ( array $parameters = null, $quiet = false )
+    private function guessFields(array $parameters = null, $quiet = false)
     {
         $resultParams = null;
-        if (isset($parameters) && count($parameters)){
+        if (isset($parameters) && count($parameters)) {
             $resultParams = [];
-            
+
             $guessFields = [];
             foreach ($this->storage()->getFields() as $key => $fieldName) {
                 $guessFields[$key] = $this->convertFieldName($fieldName);
             }
-    
+
             foreach ($parameters as $parameterName => $value) {
                 if (in_array($parameterName, $this->storage()->getFields())) {
                     $resultParams[$parameterName] = $value;
@@ -321,7 +351,7 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
                     if (in_array($guessField, $guessFields)) {
                         $pos = array_search($guessField, $guessFields);
                         $resultParams[$this->storage()->getFields()[$pos]] = $value;
-                    } elseif (!$quiet){
+                    } elseif (!$quiet) {
                         \common_Logger::w('RestApi can not find model property ' . $parameterName . ' in fields. Storage ' . get_class($this->storage()));
                     }
                 }
@@ -329,8 +359,8 @@ abstract class AbstractRouterAdapter extends Router implements RouterAdapterInte
         }
         return $resultParams;
     }
-    
-    private function convertFieldName( $name = '' )
+
+    private function convertFieldName($name = '')
     {
         return str_replace('_', '.', $name);
     }

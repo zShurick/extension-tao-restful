@@ -29,17 +29,19 @@ return array(
     'requires' => array(
         'tao' => '>=2.17.0',
     ),
-    'acl' => array(),
+    //'managementRole' => 'http://www.tao.lu/Ontologies/TAO.rdf#taoRestApiRole',
+    'acl' => array(
+     //   array('grant', 'http://www.tao.lu/Ontologies/TAO.rdf#taoRestApiRole', array('ext'=>'taoRestApi')),
+    ),
     'install' => array(
         'oat\\taoRestAPI\\scripts\\install\\RegisterRestApiDocsStorage',
     ),
     'uninstall' => array(),
     'routes' => array(
         '/taoRestAPI' => 'oat\\taoRestAPI\\controller',
-        'special' => array(
+        'rest-route' => array(
             'class' => 'oat\\taoRestAPI\\model\\route\\ResourceRoute',
-            'namespace' => LOCAL_NAMESPACE
-        )
+        ),
     ),
     'constants' => array(
         "DIR_VIEWS" => dirname(__FILE__) . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR,

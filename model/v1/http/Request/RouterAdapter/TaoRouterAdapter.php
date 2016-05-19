@@ -30,7 +30,7 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
  */
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
-
+    
     protected function getUri()
     {
         return \tao_helpers_Uri::getPath('');

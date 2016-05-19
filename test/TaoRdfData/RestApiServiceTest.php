@@ -276,7 +276,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
     public function testGetOne()
     {
         $this->request('GET', '/resources', '/resources?id=http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource7', function (Request $req, Response $res) {
-            
+
             $req = $req->withAttribute('id', $req->getParam('id'));
                 
             try {
@@ -301,7 +301,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
     public function testGetOnePartial()
     {
         $this->request('GET', '/resources', '/resources?id=http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource7&fields=http://www.w3.org/1999/02/22-rdf-syntax-ns#type', function (Request $req, Response $res) {
-
+            
             $req = $req->withAttribute('id', $req->getParam('id'));
 
             try {
@@ -410,7 +410,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
         $this->assertEquals(201, $response->getStatusCode());
         $this->assertEquals('Created', $response->getReasonPhrase());
         $this->assertNotFalse(strpos((string)$response->getBody(), 'PHPUNIT_Resource_1010'));
-        $this->assertStringStartsWith($request->getUri() . '/http://tao-rest.loc/tao-rest.rdf#i', current($response->getHeader('Location')));
+        $this->assertNotFalse(strpos(current($response->getHeader('Location')), '#i'));
         $this->assertInstanceOf('StdClass', $response->getResourceData());
 
         $this->allowResource = true;
@@ -433,7 +433,7 @@ class RestApiServiceTest extends RestApiUnitTestRunner
         unset($_POST);
 
         // add Attribute in request
-        $request = $request->withAttribute('id', urlencode($resourceUri));
+        $request = $request->withAttribute('id', $resourceUri);
         $putData = [
             RDF_TYPE => tao_actions_form_Generis::DEFAULT_TOP_CLASS, // should be default for rdf storage
             RDFS_LABEL => 'PHPUNIT_Resource_2020',
