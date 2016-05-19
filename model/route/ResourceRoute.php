@@ -56,6 +56,7 @@ class ResourceRoute extends Route
 
                 try {
 
+                    /** @var RestApiService $service */
                     $service = ServiceManager::getServiceManager()->get(RestApiService::SERVICE_ID);
                     
                     if (isset($config['storageService'])) {
@@ -82,7 +83,7 @@ class ResourceRoute extends Route
 
                     $service->execute(function ($router, $encoder) use ($config) {
                         
-                        $router(
+                        $router (
                             \Context::getInstance()->getRequest(),
                             $config['idRule']
                         );
@@ -94,9 +95,14 @@ class ResourceRoute extends Route
                             $encoder->encode($router->getBodyData())
                         );
                     });
+                    
                 } catch (RestApiException $e) {
                     Response::write($e->getCode(), 'text/plain', [], $e->getMessage());
                 }
+                
+                // todo If I create controller, then I must to cross tao auth but this route is designed to prevent its use
+                // but I think that exit not better solution 
+                exit();
                 
             }
         } catch (\ResolverException $r) {

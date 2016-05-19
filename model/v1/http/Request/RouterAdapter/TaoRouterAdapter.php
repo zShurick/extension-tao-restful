@@ -31,6 +31,12 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
     
+    protected function getAttribute($key = '')
+    {
+        $params = $this->getQueryParams();
+        return isset($params[$key]) ? $params[$key] : null;
+    }
+
     protected function getUri()
     {
         return \tao_helpers_Uri::getPath('');
