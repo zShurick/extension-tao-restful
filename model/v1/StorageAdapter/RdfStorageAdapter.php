@@ -29,7 +29,7 @@ use core_kernel_classes_ResourceFormatter;
 use oat\taoRestAPI\exception\RestApiException;
 use tao_models_classes_ClassService;
 
-class RdfStorageAdapter extends AbstractStorageAdapter
+abstract class RdfStorageAdapter extends AbstractStorageAdapter
 {
 
     /**
@@ -58,14 +58,20 @@ class RdfStorageAdapter extends AbstractStorageAdapter
         RDF_TYPE => null,
     ];
     
-    public function __construct(tao_models_classes_ClassService $service)
+    public function __construct()
     {
-        $this->service = $service;
+        $this->service = $this->getService();
         $this->formatter = new core_kernel_classes_ResourceFormatter();
         
         // default for rdf prop
         $this->appendPropertiesValues($this->defaultProperties);
     }
+
+    /**
+     * All Rdf data models in the TAO has own service to manipulating of this data
+     * @return mixed
+     */
+    abstract protected function getService();
 
     protected function appendPropertiesValues(array $propertiesValues = null)
     {

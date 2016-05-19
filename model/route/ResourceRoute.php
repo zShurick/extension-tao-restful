@@ -58,24 +58,12 @@ class ResourceRoute extends Route
 
                     /** @var RestApiService $service */
                     $service = ServiceManager::getServiceManager()->get(RestApiService::SERVICE_ID);
-                    
-                    if (isset($config['storageService'])) {
-                        // if str pos :: then singleton else should use service manager 
-                        if (is_array($config['storageService'])) {
-                            $storageService = call_user_func($config['storageService']);
-                        } else {
-                            $storageService = new $config['storageService'];
-                        }
-                        $storageAdapter = new $config['storageAdapter']( $storageService );
-                    } else {
-                        $storageAdapter = new $config['storageAdapter'];
-                    }
 
                     if (isset($config['encoder'])) {
                         $service->setEncoder(new $config['encoder']);
                     }
 
-                    $service->setRouter(new $config['routerAdapter']($storageAdapter));
+                    $service->setRouter(new $config['routerAdapter'](new $config['storageAdapter']));
 
                     if (isset($config['authenticator'])) {
                         $service->setAuth(new $config['authenticator']);

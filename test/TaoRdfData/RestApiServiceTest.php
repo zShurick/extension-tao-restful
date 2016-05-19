@@ -26,9 +26,9 @@ use oat\generis\model\data\ModelManager;
 use oat\generis\model\kernel\persistence\file\FileIterator;
 use oat\taoRestAPI\exception\RestApiException;
 use oat\taoRestAPI\model\v1\http\Request\RouterAdapter\SlimRouterAdapter;
-use oat\taoRestAPI\model\v1\StorageAdapter\RdfStorageAdapter;
 use oat\taoRestAPI\service\v1\RestApiService;
 use oat\taoRestAPI\test\TaoRdfData\samples\RdfService;
+use oat\taoRestAPI\test\TaoRdfData\samples\TestRdfStorageAdapter;
 use oat\taoRestAPI\test\v1\Mocks\Response;
 use oat\taoRestAPI\test\v1\RestApiUnitTestRunner;
 use Slim\Http\Environment;
@@ -576,6 +576,6 @@ class RestApiServiceTest extends RestApiUnitTestRunner
 
     protected function getRouter()
     {
-        return new SlimRouterAdapter(new RdfStorageAdapter($this->rdfService));
+        return new SlimRouterAdapter(new TestRdfStorageAdapter());
     }
 }
