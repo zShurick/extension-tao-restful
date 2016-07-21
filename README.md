@@ -1,5 +1,5 @@
 extension-tao-restful
 =====================
 
-Extension to create Rest API data interface
+Extension for creation RestAPI data interface
 
