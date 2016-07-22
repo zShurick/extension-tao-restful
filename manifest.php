@@ -34,7 +34,6 @@ return array(
      //   array('grant', 'http://www.tao.lu/Ontologies/TAO.rdf#taoRestApiRole', array('ext'=>'taoRestApi')),
     ),
     'install' => array(
-        'oat\\taoRestAPI\\scripts\\install\\RegisterRestApiDocsStorage',
     ),
     'uninstall' => array(),
     'routes' => array(
