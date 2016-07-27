@@ -51,30 +51,12 @@ class v1 extends tao_actions_CommonModule
     protected $service;
 
     /**
-     * @var DocsService
-     */
-    private $docsService;
-
-    /**
      * initialize the services
      */
     public function __construct()
     {
         parent::__construct();
         $this->service = $this->getServiceManager()->get(RestApiService::SERVICE_ID);
-        $this->docsService = $this->getServiceManager()->get(DocsService::SERVICE_ID);
-    }
-
-    public function jsonDoc()
-    {
-        $this->returnJson($this->docsService->getApiDocs()['Example']);
-    }
-
-    public function documentation()
-    {
-        $this->defaultData();
-
-        $this->setView('api/index.html', 'taoRestAPI');
     }
 
     /**
