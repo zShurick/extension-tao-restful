@@ -29,7 +29,6 @@ return array(
     'requires' => array(
         'tao' => '>=2.17.0',
     ),
-    //'managementRole' => 'http://www.tao.lu/Ontologies/TAO.rdf#taoRestApiRole',
     'acl' => array(
      //   array('grant', 'http://www.tao.lu/Ontologies/TAO.rdf#taoRestApiRole', array('ext'=>'taoRestApi')),
     ),

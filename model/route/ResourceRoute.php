@@ -45,16 +45,18 @@ class ResourceRoute extends Route
         try {
             
             $parts = explode('/', $relativeUrl);
-            if ($parts[1] == 'RestApi' && preg_match('/v\d+/', $parts[2]) == 1) {
-                //return 'oat\\taoRestAPI\\controller\\v1@protocol';
-                
-                //$parts = explode('/', $this->getRequest()->getRequestURI());
-                //var_dump($this->getExtension());die;
+
+            if (preg_match('/RestApi$/', $parts[0]) == 1 && preg_match('/v\d+/', $parts[1]) == 1) {
+
                 $extensionId = $parts[0];
                 $extension = \common_ext_ExtensionsManager::singleton()->getExtensionById($extensionId);
                 $config = $extension->getConfig(self::CONFIG_NAME);
 
                 try {
+
+                    if (!$config) {
+                        throw new RestApiException(__('Incorrect configuration for %s', $extension->getName()), 500);
+                    }
 
                     /** @var RestApiService $service */
                     $service = ServiceManager::getServiceManager()->get(RestApiService::SERVICE_ID);
