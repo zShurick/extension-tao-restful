@@ -52,7 +52,7 @@ abstract class Router implements HttpRouterInterface
     public function put()
     {
         if (!$this->getResourceId()) {
-            throw new HttpRequestException(__('Forbidden to updating list of the resources'), 400);
+            throw new HttpRequestException(__('Forbidden to replacing list of the resources'), 400);
         }
     }
 

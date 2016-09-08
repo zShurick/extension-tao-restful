@@ -193,7 +193,7 @@ abstract class RdfStorageAdapter extends AbstractStorageAdapter
         
         // not editable
         $this->unsetPropertiesValue(RDF_TYPE);
-        
+
         foreach ($this->getPropertiesValues() as $property => $value) {
             $resource->editPropertyValues(new \core_kernel_classes_Property($property), $value);
         }

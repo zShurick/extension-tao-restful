@@ -20,6 +20,7 @@
  */
 
 namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
+use oat\taoRestAPI\exception\HttpRequestException;
 
 
 /**
@@ -30,7 +31,20 @@ namespace oat\taoRestAPI\model\v1\http\Request\RouterAdapter;
  */
 class TaoRouterAdapter extends AbstractRouterAdapter
 {
-    
+
+    const HTTP_METHOD = '_method';
+    const HTTP_PATCH = 'PATCH';
+
+    protected function runApiCommand($method = '', $id = '')
+    {
+        // for clearFw compatible
+        if ($method == 'PUT' && $this->getAttribute(self::HTTP_METHOD) == self::HTTP_PATCH) {
+            $method = self::HTTP_PATCH;
+        }
+
+        parent::runApiCommand($method, $id);
+    }
+
     protected function getAttribute($key = '')
     {
         $params = $this->getQueryParams();

@@ -105,7 +105,8 @@ class RestApiServiceTest extends RestApiUnitTestRunner
     {
         $resources = $this->rdfService->getRootClass()->searchInstances([RDFS_LABEL => '%PHPUNIT_Resource_%'], ['like' => true]);
         $this->assertEquals(10, count($resources));
-        $this->assertEquals([
+
+        $result = [
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource1',
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource10',
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource2',
@@ -116,7 +117,11 @@ class RestApiServiceTest extends RestApiUnitTestRunner
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource7',
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource8',
             'http://www.tao.lu/Ontologies/TAO.rdf#RestApi_testResource9',
-        ], array_keys($resources));
+        ];
+        sort($result);
+        $resourcesKey = array_keys($resources);
+        sort($resourcesKey);
+        $this->assertEquals($result, $resourcesKey);
     }
         
     public function testGetList()
