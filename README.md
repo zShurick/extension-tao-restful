@@ -1,5 +1,5 @@
-extension-tao-restful
+Restful protocol
 =====================
 
-Extension for creation RestAPI data interface
+Implemented Slim framework.
 
